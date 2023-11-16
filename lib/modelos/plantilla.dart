@@ -8,7 +8,7 @@ class Vehiculo {
   String modelo;
   String marca;
   String tipo;
-  DateTime fecha;
+  String fecha;
   List<Gastos> gastos;
 
   Vehiculo({
@@ -63,7 +63,7 @@ class Gastos {
   int vehiculoID;
   String descripcion;
   String responsable;
-  DateTime fecha;
+  String fecha;
   double monto;
   
   Gastos({
