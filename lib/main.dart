@@ -68,11 +68,11 @@ class MisTabsState extends State<MisTabs> {
           pageBuilder: (context, index) {
             switch (index) {
               case 0:
-                return ListaVehiculos();
+                return const ListaVehiculos();
               case 1:
-                return ListaGastos();
+                return const ListaGastos();
               case 2:
-                return ListaConsultas();
+                return const ListaConsultas();
               default:
                 return Container();
             }
@@ -222,6 +222,8 @@ class CustomTabsState extends State<CustomTabView>
 }
 
 class ListaVehiculos extends StatelessWidget {
+  const ListaVehiculos({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -244,6 +246,8 @@ class ListaVehiculos extends StatelessWidget {
 
 
 class ListaGastos extends StatelessWidget {
+  const ListaGastos({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -265,6 +269,8 @@ class ListaGastos extends StatelessWidget {
 }
 
 class ListaConsultas extends StatelessWidget {
+  const ListaConsultas({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -293,14 +299,5 @@ class ListaConsultas extends StatelessWidget {
         // Agrega más elementos según tus datos
       ],
     );
-  }
-}
-
-class MiInfo extends StatelessWidget {
-  const MiInfo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
   }
 }
