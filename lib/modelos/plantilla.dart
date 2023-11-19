@@ -11,8 +11,8 @@ class Vehiculo {
   String fecha;
   List<Gastos> gastos;
 
-  Vehiculo({
-    required this.id,
+  Vehiculo(
+    this.id, {
     required this.placa,
     required this.modelo,
     required this.marca,
@@ -66,8 +66,8 @@ class Gastos {
   String fecha;
   double monto;
   
-  Gastos({
-    required this.vehiculoID,
+  Gastos(
+    this.vehiculoID, {
     required this.descripcion,
     required this.responsable,
     required this.fecha,

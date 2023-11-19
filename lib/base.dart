@@ -5,7 +5,8 @@ import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 // import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 class BaseDatos {
-  static const String nombre_db = 'base.db';
+  // ignore: constant_identifier_names
+  static const String nombre_db = 'base2.db';
   static const String tablaVehiculos = 'vehiculos';
   static const String tablaGastos = 'gastos';
 
@@ -44,10 +45,10 @@ class BaseDatos {
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaVehiculos);
 
     return List.generate(maps.length, (i) {
-      final vehiculoID = maps[i]['id']['placa']['modelo']['marca']['tipo']['fecha'];
+      final vehiculoID = maps[i]['id'];
       final List<Gastos> gastos = [];
       return Vehiculo(
-        id: vehiculoID,
+        vehiculoID,
         placa: 'placa',
         modelo: 'modelo', 
         marca: 'marca', 
@@ -58,18 +59,18 @@ class BaseDatos {
   }
 
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
-    await _initDatabase();
+    //await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
   }
 
   Future<void> eliminarVehiculo(int vehiculoID) async {
-    await _initDatabase();
+    //await _initDatabase();
     await _basedatos.delete(tablaVehiculos, where: 'id = ?', whereArgs: [vehiculoID]);
     await _basedatos.delete(tablaGastos, where: 'vehiculo_id = ?', whereArgs: [vehiculoID]);
   }
 
   Future<void> agregarGasto(int vehiculoID, Gastos gastos) async {
-    await _initDatabase();
+    // await _initDatabase();
     gastos.vehiculoID = vehiculoID;
     await _basedatos.insert(tablaGastos, gastos.miMapaGastos());
   } 
