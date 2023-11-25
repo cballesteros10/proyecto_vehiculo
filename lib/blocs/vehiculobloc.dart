@@ -27,14 +27,13 @@ class EstadoCargarVehiculos extends EstadoVehiculo {
 abstract class EventoVehiculo {}
 
 class EventoAgregarVehiculo extends EventoVehiculo {
-  final int id;
   final String placa;
   final String modelo;
   final String marca;
   final String tipo;
   final String fecha;
 
-  EventoAgregarVehiculo(this.id, this.placa, this.modelo, this.marca, this.tipo, this.fecha);
+  EventoAgregarVehiculo(this.placa, this.modelo, this.marca, this.tipo, this.fecha);
 }
 
 class EventoEliminarVehiculo extends EventoVehiculo {
@@ -78,7 +77,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       modelo: event.modelo, 
       marca: event.marca, 
       tipo: event.tipo, 
-      fecha: event.fecha, 
+      fecha: int.parse(event.fecha), 
       gastos: []));
       await _cargarVehiculos(emit);
     });
@@ -102,7 +101,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       modelo: event.modelo, 
       marca: event.marca, 
       tipo: event.tipo, 
-      fecha: event.fecha, 
+      fecha: int.parse(event.fecha), 
       gastos: []));
     } else if (event is EventoEliminarVehiculo) {
       await _base.eliminarVehiculo(event.vehiculoID);

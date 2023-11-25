@@ -23,7 +23,7 @@ class BaseDatos {
           'modelo TEXT,'
           'marca TEXT,'
           'tipo TEXT,'
-          'fecha TEXT,'
+          'fecha INTEGER,'
           'gastos TEXT);'
         );
 
@@ -47,7 +47,6 @@ class BaseDatos {
 
     if(maps.isNotEmpty) {
       return List.generate(maps.length, (i) {
-      final vehiculoID = maps[i]['id'];
       final List<Gastos> gastos = [];
       return Vehiculo(
         id: maps[i]['id'],

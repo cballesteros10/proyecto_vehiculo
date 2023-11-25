@@ -7,7 +7,7 @@ class Vehiculo {
   late String modelo;
   late String marca;
   late String tipo;
-  late String fecha;
+  late int fecha;
   late List<Gastos> gastos;
 
   Vehiculo({ this.id,

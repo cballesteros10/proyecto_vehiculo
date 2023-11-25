@@ -690,13 +690,11 @@ void ventanaFlotante1(BuildContext context) {
                   fechaVehiculo.isNotEmpty) {
                 context.read<BlocVehiculo>().add(
                       EventoAgregarVehiculo(
-                        1,
-                        placaVehiculo,
-                        modeloVehiculo,
-                        marcaVehiculo,
-                        tipoVehiculo,
-                        fechaVehiculo,
-                      ),
+                        placaVehiculo, 
+                        modeloVehiculo, 
+                        marcaVehiculo, 
+                        tipoVehiculo, 
+                        fechaVehiculo)
                     );
                 Navigator.of(context).pop();
               }
