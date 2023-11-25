@@ -1,15 +1,14 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 // import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 class Vehiculo {
-  int id;
-  String placa;
-  String modelo;
-  String marca;
-  String tipo;
-  String fecha;
-  List<Gastos> gastos;
+  late int id;
+  late String placa;
+  late String modelo;
+  late String marca;
+  late String tipo;
+  late String fecha;
+  late List<Gastos> gastos;
 
   Vehiculo(
     this.id, {
@@ -21,12 +20,24 @@ class Vehiculo {
     required this.gastos
   });
 
+  Vehiculo.fromMap(Map<String, dynamic> map) {
+    id = map['id'];
+    placa = map['placa'];
+    modelo = map['modelo'];
+    marca = map['marca'];
+    tipo = map['tipo'];
+    fecha = map['fecha'];
+
+    final List<Map<String, dynamic>> gastosMapList = map['gastos'] ?? [];
+
+    gastos = gastosMapList.map((g) => Gastos.fromMap(g)).toList();
+  }
+
   @override
   bool operator ==(covariant Vehiculo other) {
     if (identical(this, other)) return true;
   
     return 
-      other.id == id &&
       other.placa == placa &&
       other.modelo == modelo &&
       other.marca == marca &&
@@ -54,17 +65,17 @@ class Vehiculo {
       'marca' : marca,
       'tipo' : tipo,
       'fecha' : fecha,
-      'gastos' : gastos
+      'gastos' : gastos.map((g) => g.miMapaGastos()).toList(),
     };
   }
 }
 
 class Gastos {
-  int vehiculoID;
-  String descripcion;
-  String responsable;
-  String fecha;
-  double monto;
+  late int vehiculoID;
+  late String descripcion;
+  late String responsable;
+  late String fecha;
+  late double monto;
   
   Gastos(
     this.vehiculoID, {
@@ -73,6 +84,14 @@ class Gastos {
     required this.fecha,
     required this.monto,
   });
+
+  Gastos.fromMap(Map<String, dynamic> map) {
+    vehiculoID = vehiculoID;
+    descripcion = map['descripcion'];
+    responsable = map['responsable'];
+    fecha = map['fecha'];
+    monto = map['monto'];
+  }
 
   Map<String, dynamic> miMapaGastos() {
     return {

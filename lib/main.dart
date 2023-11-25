@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,6 +13,7 @@ class AplicacionInyectada extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // BaseDatos _base = BaseDatos();
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -695,9 +697,7 @@ void ventanaFlotante1(BuildContext context) {
                         tipoVehiculo,
                         fechaVehiculo,
                       ),
-                      
                     );
-                    print('si se hizo');
                 Navigator.of(context).pop();
               }
             },
@@ -709,9 +709,14 @@ void ventanaFlotante1(BuildContext context) {
   );
 }
 
-class ListaGastos extends StatelessWidget {
+class ListaGastos extends StatefulWidget {
   const ListaGastos({Key? key}) : super(key: key);
 
+  @override
+  State<ListaGastos> createState() => _ListaGastosState();
+}
+
+class _ListaGastosState extends State<ListaGastos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -867,13 +872,12 @@ class ListaConsultas extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.search),
                 onPressed: () {
-                  print('Prueba');
+                  // print('Prueba');
                 },
               ),
             ],
           ),
         ),
-        // Agrega más elementos según tus datos
       ],
     );
   }

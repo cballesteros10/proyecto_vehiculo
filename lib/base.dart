@@ -23,7 +23,8 @@ class BaseDatos {
           'modelo TEXT,'
           'marca TEXT,'
           'tipo TEXT,'
-          'fecha TEXT)'
+          'fecha TEXT,'
+          'gastos TEXT);'
         );
 
         await db.execute(
@@ -34,7 +35,7 @@ class BaseDatos {
           'responsable TEXT,'
           'fecha TEXT,'
           'monto REAL,'
-          'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id))'
+          'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id));'
         );  
       }, version: 1,
     );
@@ -44,7 +45,8 @@ class BaseDatos {
     await _initDatabase();
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaVehiculos);
 
-    return List.generate(maps.length, (i) {
+    if(maps.isNotEmpty) {
+      return List.generate(maps.length, (i) {
       final vehiculoID = maps[i]['id'];
       final List<Gastos> gastos = [];
       return Vehiculo(
@@ -56,11 +58,19 @@ class BaseDatos {
         fecha: 'fecha', 
         gastos: gastos);
     });
+    } else {
+      return [];
+    }
   }
 
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
-    //await _initDatabase();
+    await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
+  }
+
+  Future<List<String>> todosLosNombres() async {
+    var resultadoConsulta = await _basedatos.rawQuery('SELECT placa FROM $tablaVehiculos');
+    return resultadoConsulta.map((e) => e['placa'] as String).toList();
   }
 
   Future<void> eliminarVehiculo(int vehiculoID) async {
@@ -73,5 +83,22 @@ class BaseDatos {
     // await _initDatabase();
     gastos.vehiculoID = vehiculoID;
     await _basedatos.insert(tablaGastos, gastos.miMapaGastos());
+  }
+
+  Future<List<Gastos>> getGastosPorVehiculos(int vehiculoID) async {
+    await _initDatabase();
+    final List<Map<String, dynamic>> maps = await _basedatos.query(
+      tablaGastos,
+      where: 'vehiculo_id = ?',
+      whereArgs: [vehiculoID],
+    );
+
+    return List.generate(maps.length, (i) {
+      return Gastos(vehiculoID, 
+      descripcion: maps[i]['descripcion'], 
+      responsable: maps[i]['responsable'], 
+      fecha: maps[i]['fecha'], 
+      monto: maps[i]['monto']);
+    });
   } 
 }
