@@ -608,14 +608,14 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                     onPressed: () {
                       context
                           .read<BlocVehiculo>()
-                          .add(EventoEliminarVehiculo(vehiculo.id));
+                          .add(EventoEliminarVehiculo(vehiculo.id!));
                     },
                   ),
                 );
               },
             );
           }
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: Text('No hay vehiculos registrados :('));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(

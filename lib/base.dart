@@ -50,12 +50,12 @@ class BaseDatos {
       final vehiculoID = maps[i]['id'];
       final List<Gastos> gastos = [];
       return Vehiculo(
-        vehiculoID,
-        placa: 'placa',
-        modelo: 'modelo', 
-        marca: 'marca', 
-        tipo: 'tipo', 
-        fecha: 'fecha', 
+        id: maps[i]['id'],
+        placa: maps[i]['placa'],
+        modelo: maps[i]['modelo'], 
+        marca: maps[i]['marca'], 
+        tipo: maps[i]['tipo'], 
+        fecha: maps[i]['fecha'], 
         gastos: gastos);
     });
     } else {
@@ -66,6 +66,12 @@ class BaseDatos {
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
     await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
+  }
+
+  Future<void> agregarVehiculo2(Vehiculo vehiculo) async {
+    await _initDatabase();
+    await _basedatos.rawInsert('INSER INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)', 
+    [vehiculo.placa, vehiculo.modelo, vehiculo.marca, vehiculo.tipo, vehiculo.fecha]);
   }
 
   Future<List<String>> todosLosNombres() async {

@@ -2,7 +2,7 @@
 import 'package:flutter/foundation.dart';
 
 class Vehiculo {
-  late int id;
+  late int? id;
   late String placa;
   late String modelo;
   late String marca;
@@ -10,8 +10,7 @@ class Vehiculo {
   late String fecha;
   late List<Gastos> gastos;
 
-  Vehiculo(
-    this.id, {
+  Vehiculo({ this.id,
     required this.placa,
     required this.modelo,
     required this.marca,

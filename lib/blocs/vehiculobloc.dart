@@ -73,13 +73,18 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
 
     on<EventoAgregarVehiculo>((event, emit) async {
       emit(EstadoCargarVehiculos([]));
-      await _base.agregarVehiculo(Vehiculo(event.id, 
+      await _base.agregarVehiculo(Vehiculo(
       placa: event.placa, 
       modelo: event.modelo, 
       marca: event.marca, 
       tipo: event.tipo, 
       fecha: event.fecha, 
       gastos: []));
+      await _cargarVehiculos(emit);
+    });
+
+    on<EventoEliminarVehiculo>((event, emit) async {
+      await _base.eliminarVehiculo(event.vehiculoID);
       await _cargarVehiculos(emit);
     });
   }
@@ -92,7 +97,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
 
   Stream<EstadoVehiculo> mapaEventoEstado(EventoVehiculo event) async* {
     if(event is EventoAgregarVehiculo) {
-      await _base.agregarVehiculo(Vehiculo(event.id, 
+      await _base.agregarVehiculo2(Vehiculo( 
       placa: event.placa, 
       modelo: event.modelo, 
       marca: event.marca, 
