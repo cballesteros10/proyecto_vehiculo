@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 // import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
@@ -71,13 +72,15 @@ class Vehiculo {
 
 class Gastos {
   late int vehiculoID;
+  late List<Categorias> categoria;
   late String descripcion;
-  late String responsable;
+  late List<Responsables> responsable;
   late String fecha;
   late double monto;
   
   Gastos(
     this.vehiculoID, {
+    required this.categoria,
     required this.descripcion,
     required this.responsable,
     required this.fecha,
@@ -86,6 +89,7 @@ class Gastos {
 
   Gastos.fromMap(Map<String, dynamic> map) {
     vehiculoID = vehiculoID;
+    categoria = map['categoria'];
     descripcion = map['descripcion'];
     responsable = map['responsable'];
     fecha = map['fecha'];
@@ -95,10 +99,75 @@ class Gastos {
   Map<String, dynamic> miMapaGastos() {
     return {
       'vehiculoID' : vehiculoID,
+      'categoria' : categoria,
       'descripcion' : descripcion,
       'responsable' : responsable,
       'fecha' : fecha,
       'monto' : monto
     };
+  }
+}
+
+class Categorias {
+  late int? id;
+  late int? gastoID;
+  late String nombre;
+
+  Categorias({ this.id,
+    this.gastoID,
+    required this.nombre,
+  });
+
+  Map<String, dynamic> miMapaCategorias() {
+    return {
+      'id' : id,
+      'gastoID' : gastoID,
+      'nombre' : nombre
+    };
+  }
+
+  @override
+  bool operator ==(covariant Categorias other) {
+    if (identical(this, other)) return true;
+  
+    return 
+      other.gastoID == gastoID &&
+      other.nombre == nombre;
+  }
+
+  @override
+  int get hashCode => gastoID.hashCode ^ nombre.hashCode;
+}
+
+class Responsables {
+  late int gastoID;
+  late String nombre;
+  late String direccion;
+  late String telefono;
+  
+  Responsables({
+    required this.gastoID,
+    required this.nombre,
+    required this.direccion,
+    required this.telefono,
+  });
+
+  @override
+  bool operator ==(covariant Responsables other) {
+    if (identical(this, other)) return true;
+  
+    return 
+      other.gastoID == gastoID &&
+      other.nombre == nombre &&
+      other.direccion == direccion &&
+      other.telefono == telefono;
+  }
+
+  @override
+  int get hashCode {
+    return gastoID.hashCode ^
+      nombre.hashCode ^
+      direccion.hashCode ^
+      telefono.hashCode;
   }
 }

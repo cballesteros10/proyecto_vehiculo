@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_vehiculos/blocs/gastosbloc.dart';
 // import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,7 +20,9 @@ class AplicacionInyectada extends StatelessWidget {
         BlocProvider(
           create: (context) => BlocVehiculo(),
         ),
-      ],
+        BlocProvider(
+          create: (context) => CategoriaBloc(),
+    )],
       child: const MainApp(),
     );
   }
@@ -156,6 +159,8 @@ class Detalles extends StatelessWidget {
   }
 
   void mostrarAgregarCategoria(BuildContext context) {
+    TextEditingController controladorNombre = TextEditingController();
+
   showModalBottomSheet(
     isScrollControlled: true,
     context: context,
@@ -174,8 +179,9 @@ class Detalles extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const TextField(
-                  decoration: InputDecoration(labelText: 'Nombre'),
+                TextField(
+                  controller: controladorNombre,
+                  decoration: const InputDecoration(labelText: 'Nombre'),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -183,8 +189,12 @@ class Detalles extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        // Lógica para agregar la categoría
-                        Navigator.of(context).pop();
+                        final nombreCategoria = controladorNombre.text;
+                        if(nombreCategoria.isNotEmpty) {
+                          context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria)); 
+                          print('si agrega $nombreCategoria');
+                          Navigator.of(context).pop();
+                        }
                       },
                       child: const Text('Agregar'),
                     ),
@@ -729,14 +739,15 @@ class _ListaGastosState extends State<ListaGastos> {
         label: const Text('Agregar gasto'),
         icon: const Icon(Icons.add_box_rounded),
         onPressed: () {
-          agregarGasto(context);
+          ventanaFlotante2(context);
         },
       ),
     );
   }
+}
 
-  Future<dynamic> agregarGasto(BuildContext context) {
-    return showDialog(
+void ventanaFlotante2(BuildContext context) {
+  showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -845,7 +856,6 @@ class _ListaGastosState extends State<ListaGastos> {
         );
       },
     );
-  }
 }
 
 class ListaConsultas extends StatelessWidget {

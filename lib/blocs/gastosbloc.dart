@@ -10,6 +10,19 @@ abstract class EstadoGasto extends Equatable{
   List<Object?> get props => [];
 }
 
+abstract class EstadoCategoria extends Equatable {
+  final List<Categorias> categorias;
+
+  const EstadoCategoria(this.categorias);
+}
+
+class Cargando extends EstadoCategoria {
+  const Cargando(super.categorias);
+
+  @override
+  List<Object?> get props => [];
+}
+
 class EstadoCargarGasto extends EstadoGasto {
   final List<Gastos> gastos;
 
@@ -19,6 +32,13 @@ class EstadoCargarGasto extends EstadoGasto {
   List<Object?> get props => [gastos];  
 }
 
+class EstadoCargarCategorias extends EstadoCategoria {
+  const EstadoCargarCategorias(List<Categorias> categorias) : super(categorias);
+
+  @override
+  List<Object?> get props => [categorias];  
+}
+
 class CargarGastos extends EstadoGasto {
   @override
   List<Object?> get props => [];
@@ -26,6 +46,13 @@ class CargarGastos extends EstadoGasto {
 
 abstract class EventoGasto extends Equatable {
   const EventoGasto();
+
+  @override
+  List<Object?> get props => [];
+}
+
+abstract class EventoCategoria extends Equatable {
+  const EventoCategoria();
 
   @override
   List<Object?> get props => [];
@@ -44,10 +71,22 @@ class EventoAgregarGasto extends EventoGasto {
   List<Object?> get props => [vehiculoID, descripcion, responsable, fecha, monto];
 }
 
+class EventoAgregarCategoria extends EventoCategoria {
+  final String nombre;
+
+  const EventoAgregarCategoria(this.nombre);
+}
+
 class EventoEliminarGasto extends EventoGasto {
   final int vehiculoID;
 
   const EventoEliminarGasto(this.vehiculoID);  
+}
+
+class EventoEliminarCategoria extends EventoCategoria {
+  final int categoriaID;
+
+  const EventoEliminarCategoria(this.categoriaID);
 }
 
 class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
@@ -59,13 +98,49 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
       await _base.agregarGasto(
         event.vehiculoID, 
         Gastos(
-          event.vehiculoID, 
+          event.vehiculoID,
+          categoria: [], 
           descripcion: event.descripcion, 
-          responsable: event.responsable, 
+          responsable: [], 
           fecha: event.fecha, 
           monto: event.monto));
         final gastos = await _base.getGastosPorVehiculos(event.vehiculoID);
         emit(EstadoCargarGasto(gastos));      
     });
+  }
+}
+
+class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
+  late BaseDatos _base;
+
+  CategoriaBloc() : super(const Cargando([])) {
+    on<EventoAgregarCategoria>((event, emit) async {
+      await _base.agregarCategoria(Categorias(
+        nombre: event.nombre));
+      await _cargarCategorias(emit);
+    });
+  }
+
+  Future<void> _cargarCategorias(Emitter<EstadoCategoria> emit) async {
+    emit(const Cargando([]));
+    final categorias = await _base.getCategorias();
+    emit(EstadoCargarCategorias(categorias));
+  }
+
+  Stream<EstadoCategoria> mapaEventoEstado(EventoCategoria event) async* {
+    if(event is EventoAgregarCategoria) {
+      await _base.agregarCategoria(Categorias(
+        nombre: event.nombre));
+    } 
+    yield* _mapaEstado2();
+  }
+
+  Stream<EstadoCategoria> _cargarCategoria() async* {
+    final categorias = await _base.getCategorias();
+    yield EstadoCargarCategorias(categorias);
+  }
+
+  Stream<EstadoCategoria> _mapaEstado2() async* {
+    yield* _cargarCategoria();
   }
 }

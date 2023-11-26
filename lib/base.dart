@@ -9,6 +9,8 @@ class BaseDatos {
   static const String nombre_db = 'base2.db';
   static const String tablaVehiculos = 'vehiculos';
   static const String tablaGastos = 'gastos';
+  static const String tablaCategorias = 'categorias';
+  static const String tablaResponsables = 'responsables';
 
   late Database _basedatos;
 
@@ -36,6 +38,24 @@ class BaseDatos {
           'fecha TEXT,'
           'monto REAL,'
           'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id));'
+        );
+
+        await db.execute(
+          'CREATE TABLE $tablaCategorias('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+          'gasto_id INTEGER,'
+          'nombre TEXT,'
+          'FOREIGN KEY (gasto_id) REFERENCES $tablaGastos (id));'
+        );
+
+        await db.execute(
+          'CREATE TABLE $tablaResponsables('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+          'gasto_id INTEGER,'
+          'nombre TEXT,'
+          'direccion TEXT(100),'
+          'telefono TEXT,'
+          'FOREIGN KEY (gasto_id) REFERENCES $tablaGastos (id));'
         );  
       }, version: 1,
     );
@@ -62,6 +82,20 @@ class BaseDatos {
     }
   }
 
+  Future<List<Categorias>> getCategorias() async {
+    await _initDatabase();
+    final List<Map<String, dynamic>> maps = await _basedatos.query(tablaCategorias);
+
+    if(maps.isNotEmpty) {
+      return List.generate(maps.length, (i) {
+      return Categorias(
+        nombre: maps[i]['nombre']);
+    });
+    } else {
+      return [];
+    }
+  }
+
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
     await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
@@ -69,8 +103,18 @@ class BaseDatos {
 
   Future<void> agregarVehiculo2(Vehiculo vehiculo) async {
     await _initDatabase();
-    await _basedatos.rawInsert('INSER INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)', 
+    await _basedatos.rawInsert('INSERT INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)', 
     [vehiculo.placa, vehiculo.modelo, vehiculo.marca, vehiculo.tipo, vehiculo.fecha]);
+  }
+
+  Future<void> agregarCategoria(Categorias categorias) async {
+    await _initDatabase();
+    await _basedatos.insert(tablaCategorias, categorias.miMapaCategorias());
+  }
+
+  Future<void> agregarCategoria2(Categorias categorias) async {
+    await _initDatabase();
+    await _basedatos.rawInsert('INSERT INTO $tablaCategorias (nombre) VALUES (?)', [categorias.nombre]);
   }
 
   Future<List<String>> todosLosNombres() async {
@@ -99,9 +143,12 @@ class BaseDatos {
     );
 
     return List.generate(maps.length, (i) {
-      return Gastos(vehiculoID, 
+      final List<Categorias> categorias = [];
+      final List<Responsables> responsables = [];
+      return Gastos(vehiculoID,
+      categoria: categorias, 
       descripcion: maps[i]['descripcion'], 
-      responsable: maps[i]['responsable'], 
+      responsable: responsables, 
       fecha: maps[i]['fecha'], 
       monto: maps[i]['monto']);
     });

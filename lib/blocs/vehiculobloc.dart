@@ -107,9 +107,10 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       await _base.eliminarVehiculo(event.vehiculoID);
     } else if (event is EventoAgregarGasto) {
       await _base.agregarGasto(event.vehiculoID, 
-      Gastos(event.vehiculoID, 
+      Gastos(event.vehiculoID,
+      categoria: [], 
       descripcion: event.descripcion, 
-      responsable: event.responsable, 
+      responsable: [], 
       fecha: event.fecha, 
       monto: event.monto));
     }
