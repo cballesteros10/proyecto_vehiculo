@@ -92,8 +92,89 @@ class Detalles extends StatelessWidget {
     );
   }
 
-  void mostrarDialogoCategorias(BuildContext context) {
-    showDialog(
+void mostrarDialogoCategorias(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Categorias'),
+        content: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+          builder: (context, state) {
+            if (state is EstadoCargarCategorias) {
+              final categorias = state.categorias;
+
+              return ListView.builder(
+                itemCount: categorias.length,
+                itemBuilder: (context, index) {
+                  final categoria = categorias[index];
+                  return ListTile(
+                    title: Text(categoria.nombre),
+                    trailing: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
+                          },
+                          icon: const Icon(Icons.delete),
+                        )
+                      ],
+                    ),
+                  );
+                },
+              );
+            }
+            return const Center(child: Text('No hay categorias registradas :('));
+          },
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FloatingActionButton.extended(
+                label: const Text('Agregar categoría'),
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  mostrarAgregarCategoria(context);
+                },
+              ),
+            ],
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cerrar'),
+          ),
+        ],
+      );
+    },
+  );
+    /* Scaffold(
+      body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+        builder: (context, state) {
+          if(state is EstadoCargarCategorias) {
+            final categorias = state.categorias;
+
+            return ListView.builder(
+              itemCount: categorias.length,
+              itemBuilder:(context, index) {
+                final categoria = categorias[index];
+                return ListTile(
+                  title: Text(categoria.nombre),
+                  trailing: Row(
+                    children: [
+                      IconButton(onPressed: () {
+                        context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
+                      }, icon: const Icon(Icons.delete))
+                    ],
+                  ),
+                );
+              },
+            );
+          }  return const Center(child: Text('No hay gastos registrados :('),);
+        },)
+    ); */
+    /* showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -155,10 +236,10 @@ class Detalles extends StatelessWidget {
           ],
         );
       },
-    );
+    ); */
   }
 
-  void mostrarAgregarCategoria(BuildContext context) {
+  /* void mostrarAgregarCategoria(BuildContext context) {
     TextEditingController controladorNombre = TextEditingController();
 
   showModalBottomSheet(
@@ -213,7 +294,7 @@ class Detalles extends StatelessWidget {
       );
     },
   );
-}
+} */
 
   void mostrarDialogoResponsables(BuildContext context) {
     showDialog(
@@ -338,6 +419,94 @@ class Detalles extends StatelessWidget {
       },
     );
   }
+}
+
+/* void mostrarAgregarCategoria(BuildContext context) {
+  TextEditingController controladorNombre = TextEditingController();
+
+  Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Nueva Categoría'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextField(
+                controller: controladorNombre,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  final nombreCategoria = controladorNombre.text;
+                  if (nombreCategoria.isNotEmpty) {
+                    context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria));
+                    print('si agrega $nombreCategoria');
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('Agregar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  ));
+} */
+
+
+void mostrarAgregarCategoria(BuildContext context) {
+  TextEditingController controladorNombre = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Nueva Categoría'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: controladorNombre,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      final nombreCategoria = controladorNombre.text;
+                      if (nombreCategoria.isNotEmpty) {
+                        context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria));
+                        print('si agrega $nombreCategoria');
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text('Agregar'),
+                  ),
+                  const SizedBox(width: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class Degradado extends StatelessWidget {
@@ -672,6 +841,7 @@ void ventanaFlotante1(BuildContext context) {
                 decoration: const InputDecoration(labelText: 'Tipo'),
               ),
               TextField(
+                keyboardType: TextInputType.number,
                 controller: controladorFecha,
                 decoration: const InputDecoration(labelText: 'Fecha'),
               ),
@@ -732,7 +902,6 @@ class _ListaGastosState extends State<ListaGastos> {
         children: const [
           ListTile(title: Text('Gasto 1')),
           ListTile(title: Text('Gasto 2')),
-          // ... más elementos según tus datos
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -760,12 +929,10 @@ void ventanaFlotante2(BuildContext context) {
                 DropdownButton<String>(
                   value: null,
                   onChanged: (String? newValue) {
-                    // Lógica para manejar el valor seleccionado o nulo
                   },
                   items: const <String>[
                     'Categoría 1',
                     'Categoría 2',
-                    // ... más elementos según tus datos
                   ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -773,17 +940,14 @@ void ventanaFlotante2(BuildContext context) {
                     );
                   }).toList(),
                 ),
-                // Dropdown para Vehiculo
                 const Text('Vehículo'),
                 DropdownButton<String>(
                   value: null,
                   onChanged: (String? newValue) {
-                    // Lógica para manejar el valor seleccionado o nulo
                   },
                   items: const <String>[
                     'Vehículo 1',
                     'Vehículo 2',
-                    // ... más elementos según tus datos
                   ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -791,17 +955,14 @@ void ventanaFlotante2(BuildContext context) {
                     );
                   }).toList(),
                 ),
-                // Dropdown para Responsable
                 const Text('Responsable'),
                 DropdownButton<String>(
                   value: null,
                   onChanged: (String? newValue) {
-                    // Lógica para manejar el valor seleccionado o nulo
                   },
                   items: const <String>[
                     'Responsable 1',
                     'Responsable 2',
-                    // ... más elementos según tus datos
                   ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -809,9 +970,7 @@ void ventanaFlotante2(BuildContext context) {
                     );
                   }).toList(),
                 ),
-                // DatePicker para Fecha
                 const Text('Fecha'),
-                // Este es un ejemplo de cómo podría ser el DatePicker
                 ElevatedButton(
                   onPressed: () {
                     showDatePicker(
@@ -826,14 +985,12 @@ void ventanaFlotante2(BuildContext context) {
                   },
                   child: const Text('Seleccionar Fecha'),
                 ),
-                // TextField para Monto
                 TextField(
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Monto',
                   ),
                   onChanged: (value) {
-                    // Lógica para manejar el valor del Monto
                   },
                 ),
               ],

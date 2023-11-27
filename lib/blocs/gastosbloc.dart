@@ -114,12 +114,16 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
   late BaseDatos _base;
 
   CategoriaBloc() : super(const Cargando([])) {
-    on<EventoAgregarCategoria>((event, emit) async {
-      await _base.agregarCategoria(Categorias(
-        nombre: event.nombre));
+  on<EventoAgregarCategoria>((event, emit) async {
+    try {
+      await _base.agregarCategoria2(Categorias(nombre: event.nombre));
       await _cargarCategorias(emit);
-    });
-  }
+    } catch (error) {
+      print('Error al agregar categoría: $error');
+    }
+  });
+}
+
 
   Future<void> _cargarCategorias(Emitter<EstadoCategoria> emit) async {
     emit(const Cargando([]));
