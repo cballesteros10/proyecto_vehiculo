@@ -3,11 +3,26 @@ import 'package:proyecto_vehiculos/blocs/gastosbloc.dart';
 // import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:proyecto_vehiculos/modelos/plantilla.dart';
+import 'package:intl/intl.dart';
+import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AplicacionInyectada());
 }
+
+List<Categorias> categorias = [];
+
+List<Vehiculo> vehiculos = [];
+
+List<Responsables> responsablessss = [
+  Responsables(
+      gastoID: 1,
+      nombre: 'Jan Ravnik',
+      direccion: 'Su casa',
+      telefono: '66521458')
+];
 
 class AplicacionInyectada extends StatelessWidget {
   const AplicacionInyectada({super.key});
@@ -70,7 +85,8 @@ class Detalles extends StatelessWidget {
       onSelected: (value) {
         // Manejar la opción seleccionada
         if (value == 'Categorías') {
-          mostrarDialogoCategorias(context);
+          Navigator.push(context, 
+          MaterialPageRoute(builder: (context) => ListaCategorias()));
         } else if (value == 'Responsables') {
           mostrarDialogoResponsables(context);
         }
@@ -96,56 +112,64 @@ void mostrarDialogoCategorias(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Categorias'),
-        content: BlocBuilder<CategoriaBloc, EstadoCategoria>(
-          builder: (context, state) {
-            if (state is EstadoCargarCategorias) {
-              final categorias = state.categorias;
-
-              return ListView.builder(
-                itemCount: categorias.length,
-                itemBuilder: (context, index) {
-                  final categoria = categorias[index];
-                  return ListTile(
-                    title: Text(categoria.nombre),
-                    trailing: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
-                          },
-                          icon: const Icon(Icons.delete),
-                        )
-                      ],
+      return Center(
+        child: SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text('Categorias'),
+            content: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+              builder: (context, state) {
+                if (state is EstadoCargarCategorias) {
+                  categorias = state.categorias;
+                  print('$categorias');
+        
+                  return Container(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      itemCount: categorias.length,
+                      itemBuilder: (context, index) {
+                        final categoria = categorias[index];
+                        return ListTile(
+                          title: Text(categoria.nombre),
+                          trailing: Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
+                                },
+                                icon: const Icon(Icons.delete),
+                              )
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   );
-                },
-              );
-            }
-            return const Center(child: Text('No hay categorias registradas :('));
-          },
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FloatingActionButton.extended(
-                label: const Text('Agregar categoría'),
-                icon: const Icon(Icons.add),
+                }
+                return const Center(child: Text('No hay categorias registradas :('));
+              },
+            ),
+            actions: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FloatingActionButton.extended(
+                    label: const Text('Agregar categoría'),
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      mostrarAgregarCategoria(context);
+                    },
+                  ),
+                ],
+              ),
+              TextButton(
                 onPressed: () {
-                  mostrarAgregarCategoria(context);
+                  Navigator.of(context).pop();
                 },
+                child: const Text('Cerrar'),
               ),
             ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cerrar'),
-          ),
-        ],
+        ),
       );
     },
   );
@@ -417,6 +441,53 @@ void mostrarDialogoCategorias(BuildContext context) {
           ),
         );
       },
+    );
+  }
+}
+
+class ListaCategorias extends StatefulWidget {
+  const ListaCategorias({super.key});
+
+  @override
+  State<ListaCategorias> createState() => _ListaCategoriasState();
+}
+
+class _ListaCategoriasState extends State<ListaCategorias> {
+  var categoria;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+        builder: (context, state) {
+          if (state is EstadoCargarCategorias) {
+            categorias = state.categorias;
+
+            return ListView.builder(
+              itemCount: categorias.length,
+              itemBuilder: (context, index) {
+                final categoria1 = categorias[index];
+                return ListTile(
+                  title: Text(categoria1.nombre),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+
+                    },
+                  ),
+                );
+              },
+            );
+          }
+          return const Center(child: Text('No hay categorias registrados :('));
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        label: const Text('Agregar categoria'),
+        icon: const Icon(Icons.add_box_rounded),
+        onPressed: () {
+          mostrarAgregarCategoria(context);
+        },
+      ),
     );
   }
 }
@@ -773,7 +844,7 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
       body: BlocBuilder<BlocVehiculo, EstadoVehiculo>(
         builder: (context, state) {
           if (state is EstadoCargarVehiculos) {
-            final vehiculos = state.vehiculos;
+            vehiculos = state.vehiculos;
 
             return ListView.builder(
               itemCount: vehiculos.length,
@@ -916,103 +987,127 @@ class _ListaGastosState extends State<ListaGastos> {
 }
 
 void ventanaFlotante2(BuildContext context) {
+  Categorias? categoriaSeleccionada;
+  final TextEditingController categoriaController = TextEditingController();
+  final TextEditingController vehiculoController = TextEditingController();
+  final TextEditingController responsableController = TextEditingController();
+  Vehiculo? vehiculoSeleccionado;
+  Responsables? responsableSeleccionado;
+
   showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Agregar gasto'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Categoria'),
-                DropdownButton<String>(
-                  value: null,
-                  onChanged: (String? newValue) {
-                  },
-                  items: const <String>[
-                    'Categoría 1',
-                    'Categoría 2',
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                const Text('Vehículo'),
-                DropdownButton<String>(
-                  value: null,
-                  onChanged: (String? newValue) {
-                  },
-                  items: const <String>[
-                    'Vehículo 1',
-                    'Vehículo 2',
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                const Text('Responsable'),
-                DropdownButton<String>(
-                  value: null,
-                  onChanged: (String? newValue) {
-                  },
-                  items: const <String>[
-                    'Responsable 1',
-                    'Responsable 2',
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                const Text('Fecha'),
-                ElevatedButton(
-                  onPressed: () {
-                    showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now()
-                          .subtract(const Duration(days: 365 * 50)),
-                      lastDate: DateTime.now(),
-                    ).then((selectedDate) {
-
-                    });
-                  },
-                  child: const Text('Seleccionar Fecha'),
-                ),
-                TextField(
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Monto',
-                  ),
-                  onChanged: (value) {
-                  },
-                ),
-              ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Agregar gasto'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownMenu<Categorias>(
+                        label: const Text('Categoria'),
+                        controller: categoriaController,
+                        onSelected: (Categorias? newValue) {
+                          setState(() {
+                            categoriaSeleccionada = newValue;
+                          });
+                        },
+                        dropdownMenuEntries: categorias
+                            .map<DropdownMenuEntry<Categorias>>(
+                                (Categorias value) {
+                          return DropdownMenuEntry<Categorias>(
+                            value: value,
+                            label: value.nombre,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownMenu<Vehiculo>(
+                        enableFilter: true,
+                        label: const Text('Vehiculo'),
+                        controller: vehiculoController,
+                        onSelected: (Vehiculo? newValue) {
+                          setState(() {
+                            vehiculoSeleccionado = newValue;
+                          });
+                        },
+                        dropdownMenuEntries: vehiculos
+                            .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
+                          return DropdownMenuEntry<Vehiculo>(
+                            value: value,
+                            label: value.placa,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownMenu<Responsables>(
+                        label: const Text('Responsable'),
+                        controller: responsableController,
+                        onSelected: (Responsables? newValue) {
+                          setState(() {
+                            responsableSeleccionado = newValue;
+                          });
+                        },
+                        dropdownMenuEntries: responsablessss
+                            .map<DropdownMenuEntry<Responsables>>(
+                                (Responsables value) {
+                          return DropdownMenuEntry<Responsables>(
+                            value: value,
+                            label: value.nombre,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    DateTimeField(
+                        decoration: const InputDecoration(
+                            labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
+                        format: DateFormat(DateFormat.YEAR_MONTH_DAY),
+                        onShowPicker: (context, currentValue) async {
+                          final fecha = await showDatePicker(
+                              initialDatePickerMode: DatePickerMode.day,
+                              initialDate: DateTime.now(),
+                              context: context,
+                              firstDate: DateTime(2010),
+                              lastDate: DateTime.now());
+                          return fecha;
+                        }),
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Monto',
+                      ),
+                      onChanged: (value) {},
+                    ),
+                  ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Lógica para agregar el gasto
-              },
-              child: const Text('Agregar'),
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Lógica para agregar el gasto
+                },
+                child: const Text('Agregar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
 
 class ListaConsultas extends StatelessWidget {

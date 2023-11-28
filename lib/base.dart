@@ -128,6 +128,12 @@ class BaseDatos {
     await _basedatos.delete(tablaGastos, where: 'vehiculo_id = ?', whereArgs: [vehiculoID]);
   }
 
+  Future<void> eliminarCategotia(int categoriaID) async {
+    //await _initDatabase();
+    await _basedatos.delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
+    await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [categoriaID]);
+  }
+
   Future<void> agregarGasto(int vehiculoID, Gastos gastos) async {
     // await _initDatabase();
     gastos.vehiculoID = vehiculoID;
