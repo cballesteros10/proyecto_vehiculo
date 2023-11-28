@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:equatable/equatable.dart';
+import 'package:sqflite/sqflite.dart';
 
 abstract class EstadoGasto extends Equatable{
   const EstadoGasto();
@@ -16,8 +17,21 @@ abstract class EstadoCategoria extends Equatable {
   const EstadoCategoria(this.categorias);
 }
 
-class Cargando extends EstadoCategoria {
-  const Cargando(super.categorias);
+abstract class EstadoResponsable extends Equatable {
+  final List<Responsables> responsables;
+
+  const EstadoResponsable(this.responsables);
+}
+
+class CargandoCategoria extends EstadoCategoria {
+  const CargandoCategoria(super.categorias);
+
+  @override
+  List<Object?> get props => [];
+}
+
+class CargandoResponsable extends EstadoResponsable {
+  const CargandoResponsable(super.responsables);
 
   @override
   List<Object?> get props => [];
@@ -39,6 +53,13 @@ class EstadoCargarCategorias extends EstadoCategoria {
   List<Object?> get props => [categorias];  
 }
 
+class EstadoCargarResponsables extends EstadoResponsable {
+  const EstadoCargarResponsables(List<Responsables> responsables) : super(responsables);
+
+  @override
+  List<Object?> get props => [responsables];
+}
+
 class CargarGastos extends EstadoGasto {
   @override
   List<Object?> get props => [];
@@ -53,6 +74,13 @@ abstract class EventoGasto extends Equatable {
 
 abstract class EventoCategoria extends Equatable {
   const EventoCategoria();
+
+  @override
+  List<Object?> get props => [];
+}
+
+abstract class EventoResponsable extends Equatable {
+  const EventoResponsable();
 
   @override
   List<Object?> get props => [];
@@ -77,6 +105,14 @@ class EventoAgregarCategoria extends EventoCategoria {
   const EventoAgregarCategoria(this.nombre);
 }
 
+class EventoAgregarResponsable extends EventoResponsable {
+  final String nombre;
+  final String direccion;
+  final String telefono;
+
+  const EventoAgregarResponsable(this.nombre, this.direccion, this.telefono);
+}
+
 class EventoEliminarGasto extends EventoGasto {
   final int vehiculoID;
 
@@ -87,6 +123,12 @@ class EventoEliminarCategoria extends EventoCategoria {
   final int categoriaID;
 
   const EventoEliminarCategoria(this.categoriaID);
+}
+
+class EventoEliminarResponsable extends EventoResponsable {
+  final int responsableID;
+
+  const EventoEliminarResponsable(this.responsableID);
 }
 
 class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
@@ -113,7 +155,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
   late BaseDatos _base;
 
-  CategoriaBloc() : super(const Cargando([])) {
+  CategoriaBloc() : super(const CargandoCategoria([])) {
     _base = BaseDatos();
 
   on<EventoAgregarCategoria>((event, emit) async {
@@ -131,9 +173,8 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
     });
 }
 
-
   Future<void> _cargarCategorias(Emitter<EstadoCategoria> emit) async {
-    emit(const Cargando([]));
+    emit(const CargandoCategoria([]));
     final categorias = await _base.getCategorias();
     emit(EstadoCargarCategorias(categorias));
   }
@@ -153,5 +194,53 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
 
   Stream<EstadoCategoria> _mapaEstado2() async* {
     yield* _cargarCategoria();
+  }
+}
+
+class ResponsableBloc extends Bloc<EventoResponsable, EstadoResponsable> {
+  late BaseDatos _base;
+
+  ResponsableBloc() : super(const CargandoResponsable([])) {
+    _base = BaseDatos();
+
+  on<EventoAgregarResponsable>((event, emit) async {
+    try {
+      await _base.agregarResponsable(Responsables(
+        nombre: event.nombre, 
+        direccion: event.direccion, 
+        telefono: event.telefono));
+      await _cargarResponsables(emit);
+    } catch (error) {
+      print('Error al agregar responsable: $error');
+    }
+  });
+
+  on<EventoEliminarResponsable>((event, emit) async {
+      await _base.eliminarResponsable(event.responsableID);
+      await _cargarResponsables(emit);
+    });
+}
+
+Future<void> _cargarResponsables(Emitter<EstadoResponsable> emit) async {
+    emit(const CargandoResponsable([]));
+    final responsables = await _base.getResponsables();
+    emit(EstadoCargarResponsables(responsables));
+  }
+
+  Stream<EstadoResponsable> mapaEventoEstado(EventoResponsable event) async* {
+    if(event is EventoAgregarResponsable) {
+      await _base.agregarCategoria(Categorias(
+        nombre: event.nombre));
+    } 
+    yield* _mapaEstado3();
+  }
+
+  Stream<EstadoResponsable> _cargarResponsable() async* {
+    final responsables = await _base.getResponsables();
+    yield EstadoCargarResponsables(responsables);
+  }
+
+  Stream<EstadoResponsable> _mapaEstado3() async* {
+    yield* _cargarResponsable();
   }
 }

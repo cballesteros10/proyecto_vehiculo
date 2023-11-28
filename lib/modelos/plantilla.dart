@@ -140,17 +140,29 @@ class Categorias {
 }
 
 class Responsables {
-  late int gastoID;
+  late int? id;
+  late int? gastoID;
   late String nombre;
   late String direccion;
   late String telefono;
   
   Responsables({
-    required this.gastoID,
+    this.id,
+    this.gastoID,
     required this.nombre,
     required this.direccion,
     required this.telefono,
   });
+
+  Map<String, dynamic> miMapaResponsables() {
+    return {
+      'id' : id,
+      'gastoID' : gastoID,
+      'nombre' : nombre,
+      'direccion' : direccion,
+      'telefono' : telefono
+    };
+  }
 
   @override
   bool operator ==(covariant Responsables other) {

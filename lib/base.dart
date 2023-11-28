@@ -96,6 +96,22 @@ class BaseDatos {
     }
   }
 
+  Future<List<Responsables>> getResponsables() async {
+    await _initDatabase();
+    final List<Map<String, dynamic>> maps = await _basedatos.query(tablaResponsables);
+
+    if(maps.isNotEmpty) {
+      return List.generate(maps.length, (i) {
+      return Responsables(
+        nombre: maps[i]['nombre'], 
+        direccion: maps[i]['direccion'], 
+        telefono: maps[i]['telefono']);
+    });
+    } else {
+      return [];
+    }
+  }
+
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
     await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
@@ -117,6 +133,17 @@ class BaseDatos {
     await _basedatos.rawInsert('INSERT INTO $tablaCategorias (nombre) VALUES (?)', [categorias.nombre]);
   }
 
+  Future<void> agregarResponsable(Responsables responsables) async {
+    await _initDatabase();
+    await _basedatos.rawInsert('INSERT INTO $tablaResponsables (nombre, direccion, telefono) VALUES (?, ?, ?)', 
+    [responsables.nombre, responsables.direccion, responsables.telefono]);
+  }
+
+  Future<void> agregarResponsable2(Responsables responsables) async {
+    await _initDatabase();
+    await _basedatos.insert(tablaResponsables, responsables.miMapaResponsables());
+  }
+
   Future<List<String>> todosLosNombres() async {
     var resultadoConsulta = await _basedatos.rawQuery('SELECT placa FROM $tablaVehiculos');
     return resultadoConsulta.map((e) => e['placa'] as String).toList();
@@ -132,6 +159,12 @@ class BaseDatos {
     //await _initDatabase();
     await _basedatos.delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
     await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [categoriaID]);
+  }
+
+  Future<void> eliminarResponsable(int responsableID) async {
+    //await _initDatabase();
+    await _basedatos.delete(tablaResponsables, where: 'id = ?', whereArgs: [responsableID]);
+    await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [responsableID]);
   }
 
   Future<void> agregarGasto(int vehiculoID, Gastos gastos) async {

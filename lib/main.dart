@@ -16,13 +16,7 @@ List<Categorias> categorias = [];
 
 List<Vehiculo> vehiculos = [];
 
-List<Responsables> responsablessss = [
-  Responsables(
-      gastoID: 1,
-      nombre: 'Jan Ravnik',
-      direccion: 'Su casa',
-      telefono: '66521458')
-];
+List<Responsables> responsablessss = [];
 
 class AplicacionInyectada extends StatelessWidget {
   const AplicacionInyectada({super.key});
@@ -86,9 +80,10 @@ class Detalles extends StatelessWidget {
         // Manejar la opción seleccionada
         if (value == 'Categorías') {
           Navigator.push(context, 
-          MaterialPageRoute(builder: (context) => ListaCategorias()));
+          MaterialPageRoute(builder: (context) => const ListaCategorias()));
         } else if (value == 'Responsables') {
-          mostrarDialogoResponsables(context);
+          Navigator.push(context, 
+          MaterialPageRoute(builder: (context) => const ListaResponsables()));
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -107,342 +102,6 @@ class Detalles extends StatelessWidget {
       ],
     );
   }
-
-void mostrarDialogoCategorias(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Center(
-        child: SingleChildScrollView(
-          child: AlertDialog(
-            title: const Text('Categorias'),
-            content: BlocBuilder<CategoriaBloc, EstadoCategoria>(
-              builder: (context, state) {
-                if (state is EstadoCargarCategorias) {
-                  categorias = state.categorias;
-                  print('$categorias');
-        
-                  return Container(
-                    width: double.maxFinite,
-                    child: ListView.builder(
-                      itemCount: categorias.length,
-                      itemBuilder: (context, index) {
-                        final categoria = categorias[index];
-                        return ListTile(
-                          title: Text(categoria.nombre),
-                          trailing: Row(
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
-                                },
-                                icon: const Icon(Icons.delete),
-                              )
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }
-                return const Center(child: Text('No hay categorias registradas :('));
-              },
-            ),
-            actions: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FloatingActionButton.extended(
-                    label: const Text('Agregar categoría'),
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      mostrarAgregarCategoria(context);
-                    },
-                  ),
-                ],
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cerrar'),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-    /* Scaffold(
-      body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
-        builder: (context, state) {
-          if(state is EstadoCargarCategorias) {
-            final categorias = state.categorias;
-
-            return ListView.builder(
-              itemCount: categorias.length,
-              itemBuilder:(context, index) {
-                final categoria = categorias[index];
-                return ListTile(
-                  title: Text(categoria.nombre),
-                  trailing: Row(
-                    children: [
-                      IconButton(onPressed: () {
-                        context.read<CategoriaBloc>().add(EventoEliminarCategoria(categoria.id!));
-                      }, icon: const Icon(Icons.delete))
-                    ],
-                  ),
-                );
-              },
-            );
-          }  return const Center(child: Text('No hay gastos registrados :('),);
-        },)
-    ); */
-    /* showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Categorías existentes'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: double.maxFinite,
-              height: 350, // Altura del ScrollView
-              child: ListView.builder(
-                itemCount: 10, // Reemplaza con la cantidad de categorías
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text('Categoría $index'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            // Lógica para editar la categoría
-                            Navigator.of(context).pop();
-                            // Aquí puedes abrir otro diálogo para editar la categoría
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            // Lógica para eliminar la categoría
-                            Navigator.of(context).pop();
-                            // Aquí puedes mostrar un diálogo de confirmación para eliminar
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.extended(
-                  label: const Text('Agregar categoría'),
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    mostrarAgregarCategoria(context);
-                  },
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
-    ); */
-  }
-
-  /* void mostrarAgregarCategoria(BuildContext context) {
-    TextEditingController controladorNombre = TextEditingController();
-
-  showModalBottomSheet(
-    isScrollControlled: true,
-    context: context,
-    builder: (BuildContext context) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                const Text(
-                  'Nueva Categoría',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextField(
-                  controller: controladorNombre,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        final nombreCategoria = controladorNombre.text;
-                        if(nombreCategoria.isNotEmpty) {
-                          context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria)); 
-                          print('si agrega $nombreCategoria');
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: const Text('Agregar'),
-                    ),
-                    const SizedBox(width: 20),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Cancelar'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-      );
-    },
-  );
-} */
-
-  void mostrarDialogoResponsables(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Responsables existentes'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: double.maxFinite,
-              height: 350, // Altura del ScrollView
-              child: ListView.builder(
-                itemCount: 10, // Reemplaza con la cantidad de responsables
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text('Responsable $index'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            // Lógica para editar el responsable
-                            Navigator.of(context).pop();
-                            // Aquí puedes abrir otro diálogo para editar el responsable
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            // Lógica para eliminar el responsable
-                            Navigator.of(context).pop();
-                            // Aquí puedes mostrar un diálogo de confirmación para eliminar
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.extended(
-                  label: const Text('Agregar responsable'),
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    mostrarAgregarResponsable(context);
-                  },
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void mostrarAgregarResponsable(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const Text(
-                    'Nuevo Responsable',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const TextField(
-                    decoration: InputDecoration(labelText: 'Nombre'),
-                  ),
-                  const TextField(
-                    decoration: InputDecoration(labelText: 'Dirección'),
-                  ),
-                  const TextField(
-                    decoration: InputDecoration(labelText: 'Teléfono'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          // Lógica para agregar el responsable
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Agregar'),
-                      ),
-                      const SizedBox(width: 20),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Cancelar'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class ListaCategorias extends StatefulWidget {
@@ -453,7 +112,6 @@ class ListaCategorias extends StatefulWidget {
 }
 
 class _ListaCategoriasState extends State<ListaCategorias> {
-  var categoria;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -492,45 +150,51 @@ class _ListaCategoriasState extends State<ListaCategorias> {
   }
 }
 
-/* void mostrarAgregarCategoria(BuildContext context) {
-  TextEditingController controladorNombre = TextEditingController();
+class ListaResponsables extends StatefulWidget {
+  const ListaResponsables({super.key});
 
-  Navigator.of(context).push(MaterialPageRoute<void>(
-    builder: (BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Nueva Categoría'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TextField(
-                controller: controladorNombre,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  final nombreCategoria = controladorNombre.text;
-                  if (nombreCategoria.isNotEmpty) {
-                    context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria));
-                    print('si agrega $nombreCategoria');
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: const Text('Agregar'),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  ));
-} */
+  @override
+  State<ListaResponsables> createState() => _ListaResponsablesState();
+}
 
+class _ListaResponsablesState extends State<ListaResponsables> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+        builder: (context, state) {
+          if (state is EstadoCargarCategorias) {
+            categorias = state.categorias;
+
+            return ListView.builder(
+              itemCount: categorias.length,
+              itemBuilder: (context, index) {
+                final categoria1 = categorias[index];
+                return ListTile(
+                  title: Text(categoria1.nombre),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+
+                    },
+                  ),
+                );
+              },
+            );
+          }
+          return const Center(child: Text('No hay categorias registrados :('));
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        label: const Text('Agregar categoria'),
+        icon: const Icon(Icons.add_box_rounded),
+        onPressed: () {
+          mostrarAgregarCategoria(context);
+        },
+      ),
+    );
+  }
+}
 
 void mostrarAgregarCategoria(BuildContext context) {
   TextEditingController controladorNombre = TextEditingController();
@@ -560,6 +224,57 @@ void mostrarAgregarCategoria(BuildContext context) {
                         print('si agrega $nombreCategoria');
                         Navigator.of(context).pop();
                       }
+                    },
+                    child: const Text('Agregar'),
+                  ),
+                  const SizedBox(width: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void mostrarAgregarResponsable(BuildContext context) {
+  TextEditingController controladorNombre = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Nuevo Responsable'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: controladorNombre,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              TextField(
+                controller: controladorNombre,
+                decoration: const InputDecoration(labelText: 'Direccion'),
+              ),
+              TextField(
+                controller: controladorNombre,
+                decoration: const InputDecoration(labelText: 'Telefono'),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                        Navigator.of(context).pop();
                     },
                     child: const Text('Agregar'),
                   ),
@@ -872,14 +587,14 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
         label: const Text('Agregar vehículo'),
         icon: const Icon(Icons.add_box_rounded),
         onPressed: () {
-          ventanaFlotante1(context);
+          agregarVehiculos(context);
         },
       ),
     );
   }
 }
 
-void ventanaFlotante1(BuildContext context) {
+void agregarVehiculos(BuildContext context) {
   TextEditingController controladorPlaca = TextEditingController();
   TextEditingController controladorModelo = TextEditingController();
   TextEditingController controladorMarca = TextEditingController();
@@ -979,14 +694,14 @@ class _ListaGastosState extends State<ListaGastos> {
         label: const Text('Agregar gasto'),
         icon: const Icon(Icons.add_box_rounded),
         onPressed: () {
-          ventanaFlotante2(context);
+          agregarGastos(context);
         },
       ),
     );
   }
 }
 
-void ventanaFlotante2(BuildContext context) {
+void agregarGastos(BuildContext context) {
   Categorias? categoriaSeleccionada;
   final TextEditingController categoriaController = TextEditingController();
   final TextEditingController vehiculoController = TextEditingController();
