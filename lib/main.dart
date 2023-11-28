@@ -31,7 +31,9 @@ class AplicacionInyectada extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => CategoriaBloc(),
-    )],
+        ),
+        BlocProvider(create: ((context) => ResponsableBloc()))
+      ],
       child: const MainApp(),
     );
   }
@@ -45,8 +47,7 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
         title: 'MyCarApp',
         debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          appBar: MiAppBar(), body: MisTabs()));
+        home: Scaffold(appBar: MiAppBar(), body: MisTabs()));
   }
 }
 
@@ -79,11 +80,13 @@ class Detalles extends StatelessWidget {
       onSelected: (value) {
         // Manejar la opción seleccionada
         if (value == 'Categorías') {
-          Navigator.push(context, 
-          MaterialPageRoute(builder: (context) => const ListaCategorias()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const ListaCategorias()));
         } else if (value == 'Responsables') {
-          Navigator.push(context, 
-          MaterialPageRoute(builder: (context) => const ListaResponsables()));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const ListaResponsables()));
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -128,15 +131,13 @@ class _ListaCategoriasState extends State<ListaCategorias> {
                   title: Text(categoria1.nombre),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () {
-
-                    },
+                    onPressed: () {},
                   ),
                 );
               },
             );
           }
-          return const Center(child: Text('No hay categorias registrados :('));
+          return const Center(child: Text('No hay categorias registradas :('));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -161,35 +162,42 @@ class _ListaResponsablesState extends State<ListaResponsables> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
+      body: BlocBuilder<ResponsableBloc, EstadoResponsable>(
         builder: (context, state) {
-          if (state is EstadoCargarCategorias) {
-            categorias = state.categorias;
-
+          if (state is EstadoCargarResponsables) {
+            responsablessss = state.responsables;
             return ListView.builder(
-              itemCount: categorias.length,
+              itemCount: responsablessss.length,
               itemBuilder: (context, index) {
-                final categoria1 = categorias[index];
+                final responsable1 = responsablessss[index];
                 return ListTile(
-                  title: Text(categoria1.nombre),
+                  title: Text(responsable1.nombre),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(responsable1.direccion),
+                      Text(responsable1.telefono)
+                    ],
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
-
+                      context.read<ResponsableBloc>().add(EventoEliminarResponsable(responsable1.id!));
                     },
                   ),
                 );
               },
             );
           }
-          return const Center(child: Text('No hay categorias registrados :('));
+          return const Center(
+              child: Text('No hay responsables registrados :('));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        label: const Text('Agregar categoria'),
+        label: const Text('Agregar responsable'),
         icon: const Icon(Icons.add_box_rounded),
         onPressed: () {
-          mostrarAgregarCategoria(context);
+          mostrarAgregarResponsable(context);
         },
       ),
     );
@@ -220,8 +228,9 @@ void mostrarAgregarCategoria(BuildContext context) {
                     onPressed: () {
                       final nombreCategoria = controladorNombre.text;
                       if (nombreCategoria.isNotEmpty) {
-                        context.read<CategoriaBloc>().add(EventoAgregarCategoria(nombreCategoria));
-                        print('si agrega $nombreCategoria');
+                        context
+                            .read<CategoriaBloc>()
+                            .add(EventoAgregarCategoria(nombreCategoria));
                         Navigator.of(context).pop();
                       }
                     },
@@ -246,6 +255,8 @@ void mostrarAgregarCategoria(BuildContext context) {
 
 void mostrarAgregarResponsable(BuildContext context) {
   TextEditingController controladorNombre = TextEditingController();
+  TextEditingController controladorDireccion = TextEditingController();
+  TextEditingController controladorTelefono = TextEditingController();
 
   showDialog(
     context: context,
@@ -261,11 +272,11 @@ void mostrarAgregarResponsable(BuildContext context) {
                 decoration: const InputDecoration(labelText: 'Nombre'),
               ),
               TextField(
-                controller: controladorNombre,
+                controller: controladorDireccion,
                 decoration: const InputDecoration(labelText: 'Direccion'),
               ),
               TextField(
-                controller: controladorNombre,
+                controller: controladorTelefono,
                 decoration: const InputDecoration(labelText: 'Telefono'),
               ),
               const SizedBox(height: 20),
@@ -274,7 +285,18 @@ void mostrarAgregarResponsable(BuildContext context) {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                        Navigator.of(context).pop();
+                      final nombreResponsable = controladorNombre.text;
+                      final direccionResponsable = controladorDireccion.text;
+                      final telefonoResponsable = controladorTelefono.text;
+
+                      if (nombreResponsable.isNotEmpty &&
+                          direccionResponsable.isNotEmpty &&
+                          telefonoResponsable.isNotEmpty) {
+                        context.read<ResponsableBloc>().add(
+                            EventoAgregarResponsable(nombreResponsable,
+                                direccionResponsable, telefonoResponsable));
+                      }
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Agregar'),
                   ),
@@ -654,14 +676,12 @@ void agregarVehiculos(BuildContext context) {
                   marcaVehiculo.isNotEmpty &&
                   tipoVehiculo.isNotEmpty &&
                   fechaVehiculo.isNotEmpty) {
-                context.read<BlocVehiculo>().add(
-                      EventoAgregarVehiculo(
-                        placaVehiculo, 
-                        modeloVehiculo, 
-                        marcaVehiculo, 
-                        tipoVehiculo, 
-                        fechaVehiculo)
-                    );
+                context.read<BlocVehiculo>().add(EventoAgregarVehiculo(
+                    placaVehiculo,
+                    modeloVehiculo,
+                    marcaVehiculo,
+                    tipoVehiculo,
+                    fechaVehiculo));
                 Navigator.of(context).pop();
               }
             },
@@ -710,98 +730,98 @@ void agregarGastos(BuildContext context) {
   Responsables? responsableSeleccionado;
 
   showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
           return AlertDialog(
             title: const Text('Agregar gasto'),
             content: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: DropdownMenu<Categorias>(
-                        label: const Text('Categoria'),
-                        controller: categoriaController,
-                        onSelected: (Categorias? newValue) {
-                          setState(() {
-                            categoriaSeleccionada = newValue;
-                          });
-                        },
-                        dropdownMenuEntries: categorias
-                            .map<DropdownMenuEntry<Categorias>>(
-                                (Categorias value) {
-                          return DropdownMenuEntry<Categorias>(
-                            value: value,
-                            label: value.nombre,
-                          );
-                        }).toList(),
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Categorias>(
+                      label: const Text('Categoria'),
+                      controller: categoriaController,
+                      onSelected: (Categorias? newValue) {
+                        setState(() {
+                          categoriaSeleccionada = newValue;
+                        });
+                      },
+                      dropdownMenuEntries: categorias
+                          .map<DropdownMenuEntry<Categorias>>(
+                              (Categorias value) {
+                        return DropdownMenuEntry<Categorias>(
+                          value: value,
+                          label: value.nombre,
+                        );
+                      }).toList(),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: DropdownMenu<Vehiculo>(
-                        enableFilter: true,
-                        label: const Text('Vehiculo'),
-                        controller: vehiculoController,
-                        onSelected: (Vehiculo? newValue) {
-                          setState(() {
-                            vehiculoSeleccionado = newValue;
-                          });
-                        },
-                        dropdownMenuEntries: vehiculos
-                            .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
-                          return DropdownMenuEntry<Vehiculo>(
-                            value: value,
-                            label: value.placa,
-                          );
-                        }).toList(),
-                      ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Vehiculo>(
+                      enableFilter: true,
+                      label: const Text('Vehiculo'),
+                      controller: vehiculoController,
+                      onSelected: (Vehiculo? newValue) {
+                        setState(() {
+                          vehiculoSeleccionado = newValue;
+                        });
+                      },
+                      dropdownMenuEntries: vehiculos
+                          .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
+                        return DropdownMenuEntry<Vehiculo>(
+                          value: value,
+                          label: value.placa,
+                        );
+                      }).toList(),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: DropdownMenu<Responsables>(
-                        label: const Text('Responsable'),
-                        controller: responsableController,
-                        onSelected: (Responsables? newValue) {
-                          setState(() {
-                            responsableSeleccionado = newValue;
-                          });
-                        },
-                        dropdownMenuEntries: responsablessss
-                            .map<DropdownMenuEntry<Responsables>>(
-                                (Responsables value) {
-                          return DropdownMenuEntry<Responsables>(
-                            value: value,
-                            label: value.nombre,
-                          );
-                        }).toList(),
-                      ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Responsables>(
+                      label: const Text('Responsable'),
+                      controller: responsableController,
+                      onSelected: (Responsables? newValue) {
+                        setState(() {
+                          responsableSeleccionado = newValue;
+                        });
+                      },
+                      dropdownMenuEntries: responsablessss
+                          .map<DropdownMenuEntry<Responsables>>(
+                              (Responsables value) {
+                        return DropdownMenuEntry<Responsables>(
+                          value: value,
+                          label: value.nombre,
+                        );
+                      }).toList(),
                     ),
-                    DateTimeField(
-                        decoration: const InputDecoration(
-                            labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
-                        format: DateFormat(DateFormat.YEAR_MONTH_DAY),
-                        onShowPicker: (context, currentValue) async {
-                          final fecha = await showDatePicker(
-                              initialDatePickerMode: DatePickerMode.day,
-                              initialDate: DateTime.now(),
-                              context: context,
-                              firstDate: DateTime(2010),
-                              lastDate: DateTime.now());
-                          return fecha;
-                        }),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      keyboardType: TextInputType.number,
+                  ),
+                  DateTimeField(
                       decoration: const InputDecoration(
-                        labelText: 'Monto',
-                      ),
-                      onChanged: (value) {},
+                          labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
+                      format: DateFormat(DateFormat.YEAR_MONTH_DAY),
+                      onShowPicker: (context, currentValue) async {
+                        final fecha = await showDatePicker(
+                            initialDatePickerMode: DatePickerMode.day,
+                            initialDate: DateTime.now(),
+                            context: context,
+                            firstDate: DateTime(2010),
+                            lastDate: DateTime.now());
+                        return fecha;
+                      }),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Monto',
                     ),
-                  ],
+                    onChanged: (value) {},
+                  ),
+                ],
               ),
             ),
             actions: <Widget>[

@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:equatable/equatable.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
 
 abstract class EstadoGasto extends Equatable{
   const EstadoGasto();
@@ -159,12 +159,8 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
     _base = BaseDatos();
 
   on<EventoAgregarCategoria>((event, emit) async {
-    try {
       await _base.agregarCategoria2(Categorias(nombre: event.nombre));
       await _cargarCategorias(emit);
-    } catch (error) {
-      print('Error al agregar categoría: $error');
-    }
   });
 
   on<EventoEliminarCategoria>((event, emit) async {
@@ -204,15 +200,11 @@ class ResponsableBloc extends Bloc<EventoResponsable, EstadoResponsable> {
     _base = BaseDatos();
 
   on<EventoAgregarResponsable>((event, emit) async {
-    try {
       await _base.agregarResponsable(Responsables(
         nombre: event.nombre, 
         direccion: event.direccion, 
         telefono: event.telefono));
       await _cargarResponsables(emit);
-    } catch (error) {
-      print('Error al agregar responsable: $error');
-    }
   });
 
   on<EventoEliminarResponsable>((event, emit) async {
