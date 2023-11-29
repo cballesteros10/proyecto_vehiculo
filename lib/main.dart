@@ -36,7 +36,8 @@ class AplicacionInyectada extends StatelessWidget {
           create: (context) => ResponsableBloc(),
         ),
         BlocProvider(
-          create: (context) => GastoBloc(),)
+          create: (context) => GastoBloc(),
+        )
       ],
       child: const MainApp(),
     );
@@ -153,12 +154,17 @@ class _ListaCategoriasState extends State<ListaCategorias> {
             return ListView.builder(
               itemCount: categorias.length,
               itemBuilder: (context, index) {
-                final categoria1 = categorias[index];
+                final categoriaSeleccionada = categorias[index];
                 return ListTile(
-                  title: Text(categoria1.nombre),
+                  title: Text(categoriaSeleccionada.nombre),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () {},
+                    onPressed: () {
+                      if (categoriaSeleccionada.id != null) {
+                        context.read<CategoriaBloc>().add(
+                            EventoEliminarCategoria(categoriaSeleccionada.id!));
+                      }
+                    },
                   ),
                 );
               },
@@ -324,6 +330,8 @@ void mostrarAgregarResponsable(BuildContext context) {
                 decoration: const InputDecoration(labelText: 'Direccion'),
               ),
               TextField(
+                keyboardType: TextInputType.number,
+                maxLength: 10,
                 controller: controladorTelefono,
                 decoration: const InputDecoration(labelText: 'Telefono'),
               ),
@@ -637,22 +645,59 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                 final vehiculo = vehiculos[index];
                 return Card(
                   child: ListTile(
-                    title: Text(vehiculo.placa),
-                    subtitle: Text(vehiculo.modelo),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        context
-                            .read<BlocVehiculo>()
-                            .add(EventoEliminarVehiculo(vehiculo.id!));
-                      },
+                    title: Text(
+                        '${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [Text(vehiculo.marca), Text(vehiculo.tipo)],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirmar eliminación'),
+                                  content: const Text(
+                                      '¿Está seguro de eliminar este vehículo? Se eliminara de forma permanente.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: const Text('Cancelar'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: const Text('Eliminar'),
+                                      onPressed: () {
+                                        context.read<BlocVehiculo>().add(
+                                            EventoEliminarVehiculo(
+                                                vehiculo.id!));
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 );
               },
             );
           }
-          return const Center(child: Text('No hay vehiculos registrados :('));
+          return const Center(child: Text('No hay vehículos registrados :('));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -674,6 +719,7 @@ void selectYear(BuildContext context, TextEditingController controller) async {
         title: const Text('Selecciona el año'),
         content: SizedBox(
           width: 200.0,
+          height: 400,
           child: YearPicker(
             firstDate: DateTime(DateTime.now().year - 70),
             lastDate: DateTime(DateTime.now().year + 1),
@@ -698,8 +744,8 @@ Widget seleccionadorAnio(
     readOnly: true,
     onTap: () => selectYear(context, controller),
     decoration: const InputDecoration(
-      labelText: 'Seleccionar año',
-      suffixIcon: Icon(Icons.calendar_today),
+      labelText: 'Año',
+      prefixIcon: Icon(Icons.calendar_today),
     ),
     controller: controller,
   );
@@ -726,19 +772,28 @@ void agregarVehiculos(BuildContext context) {
                   TextField(
                     controller: controladorPlaca,
                     decoration: const InputDecoration(
-                        labelText: 'Placa', prefixIcon: Icon(Icons.palette)),
+                        labelText: 'Placa', prefixIcon: Icon(Icons.rectangle)),
                   ),
                   TextField(
                     controller: controladorModelo,
-                    decoration: const InputDecoration(labelText: 'Modelo'),
+                    decoration: const InputDecoration(
+                        labelText: 'Modelo',
+                        hintText: 'Versa, Corolla, etc...',
+                        prefixIcon: Icon(Icons.car_rental)),
                   ),
                   TextField(
                     controller: controladorMarca,
-                    decoration: const InputDecoration(labelText: 'Marca'),
+                    decoration: const InputDecoration(
+                        labelText: 'Marca',
+                        hintText: 'Nissan, Toyota, etc...',
+                        prefixIcon: Icon(Icons.check)),
                   ),
                   TextField(
                     controller: controladorTipo,
-                    decoration: const InputDecoration(labelText: 'Tipo'),
+                    decoration: const InputDecoration(
+                        labelText: 'Tipo',
+                        hintText: 'Carro, camioneta, etc...',
+                        prefixIcon: Icon(Icons.type_specimen)),
                   ),
                   seleccionadorAnio(context, controladorFecha),
                 ],
@@ -816,6 +871,8 @@ void agregarGastos(BuildContext context) {
   final TextEditingController categoriaController = TextEditingController();
   final TextEditingController vehiculoController = TextEditingController();
   final TextEditingController responsableController = TextEditingController();
+  TextEditingController controladorMonto = TextEditingController();
+  DateTime fechaSeleccionada = DateTime.now();
   Vehiculo? vehiculoSeleccionado;
   Responsables? responsableSeleccionado;
   bool switchValue = false;
@@ -835,7 +892,15 @@ void agregarGastos(BuildContext context) {
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Categorias>(
                       width: 250,
-                      label: const Text('Categoria'),
+                      label: const Row(
+                        children: [
+                          Icon(Icons
+                              .category),
+                          SizedBox(
+                              width: 8),
+                          Text('Categoría'),
+                        ],
+                      ),
                       controller: categoriaController,
                       onSelected: (Categorias? newValue) {
                         setState(() {
@@ -857,7 +922,13 @@ void agregarGastos(BuildContext context) {
                     child: DropdownMenu<Vehiculo>(
                       width: 250,
                       enableFilter: true,
-                      label: const Text('Vehiculo'),
+                      label: const Row(
+                        children: [
+                          Icon(Icons.directions_car),
+                          SizedBox(width: 8),
+                          Text('Vehículo'),
+                        ],
+                      ),
                       controller: vehiculoController,
                       onSelected: (Vehiculo? newValue) {
                         setState(() {
@@ -868,38 +939,64 @@ void agregarGastos(BuildContext context) {
                           .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
                         return DropdownMenuEntry<Vehiculo>(
                           value: value,
-                          label: '${value.placa}-${value.marca}',
+                          label:
+                              '${value.placa} - ${value.marca} ${value.fecha}',
                         );
                       }).toList(),
                     ),
                   ),
                   DateTimeField(
-                      decoration: const InputDecoration(
-                          labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
-                      format: DateFormat(DateFormat.YEAR_MONTH_DAY),
-                      onShowPicker: (context, currentValue) async {
-                        final fecha = await showDatePicker(
-                            initialDatePickerMode: DatePickerMode.day,
-                            initialDate: DateTime.now(),
-                            context: context,
-                            firstDate: DateTime(2010),
-                            lastDate: DateTime.now());
-                        return fecha;
-                      }),
+                    decoration: const InputDecoration(
+                      labelText: 'Fecha', 
+                      icon: Icon(Icons.calendar_month)
+                    ),
+                    format: DateFormat(DateFormat.YEAR_MONTH_DAY),
+                    onShowPicker: (context, currentValue) async {
+                      final fecha = await showDatePicker(
+                        initialDatePickerMode: DatePickerMode.day,
+                        initialDate: fechaSeleccionada,
+                        context: context,
+                        firstDate: DateTime(2010),
+                        lastDate: DateTime.now(),
+                      );
+                      
+                      if (fecha != null) {
+                        setState(() {
+                          fechaSeleccionada = fecha;
+                        });
+                      }
+                      return fecha;
+                    },
+                  ),
                   const SizedBox(height: 16.0),
                   TextField(
                     keyboardType: TextInputType.number,
+                    controller: controladorMonto,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.monetization_on),
                       labelText: 'Monto',
                     ),
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      final numericValue =
+                          int.tryParse(value.replaceAll(',', ''));
+                      if (numericValue != null) {
+                        final formatter = NumberFormat('#,###');
+                        final newText = formatter.format(numericValue);
+                        if (newText != controladorMonto.text) {
+                          controladorMonto.value = TextEditingValue(
+                            text: newText,
+                            selection:
+                                TextSelection.collapsed(offset: newText.length),
+                          );
+                        }
+                      }
+                    },
                   ),
                   const SizedBox(height: 16.0),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Alguien más se encargó del gasto...'),
+                      const Text('Existio un encargado?'),
                       Switch(
                         value: switchValue,
                         onChanged: (value) {
@@ -914,12 +1011,18 @@ void agregarGastos(BuildContext context) {
                       ),
                     ],
                   ),
-                  if (switchValue)
+                  if (switchValue) 
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownMenu<Responsables>(
                         width: 250,
-                        label: const Text('Responsable'),
+                        label: const Row(
+                          children: [
+                            Icon(Icons.supervised_user_circle),
+                            SizedBox(width: 8),
+                            Text('Responsable'),
+                          ],
+                        ),
                         controller: responsableController,
                         onSelected: (Responsables? newValue) {
                           setState(() {
@@ -948,16 +1051,23 @@ void agregarGastos(BuildContext context) {
               ),
               ElevatedButton(
                 onPressed: () {
-                  /* final categoriaGasto = categoriaSeleccionada;
+                  final categoriaGasto = categoriaSeleccionada;
                   final vehiculoGasto = vehiculoSeleccionado;
                   final responsableGasto = responsableSeleccionado;
+                  final monto = int.tryParse(controladorMonto.text.replaceAll(',', ''));
 
-                  context.read<GastoBloc>().add(EventoAgregarGasto(
-                    vehiculoSeleccionado, 
-                    descripcion, 
-                    responsableSeleccionado, 
-                    fecha, 
-                    monto)); */
+                  if (categoriaGasto != null &&
+                      vehiculoGasto != null &&
+                      monto != null) {
+                        /* context.read<GastoBloc>().add(EventoAgregarGasto(
+                          vehiculoGasto, 
+                          categoriaGasto, 
+                          responsableGasto, 
+                          fechaSeleccionada,
+                          monto)
+                        ); */
+                  }
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Agregar'),
               ),
