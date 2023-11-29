@@ -32,7 +32,11 @@ class AplicacionInyectada extends StatelessWidget {
         BlocProvider(
           create: (context) => CategoriaBloc(),
         ),
-        BlocProvider(create: ((context) => ResponsableBloc()))
+        BlocProvider(
+          create: (context) => ResponsableBloc(),
+        ),
+        BlocProvider(
+          create: (context) => GastoBloc(),)
       ],
       child: const MainApp(),
     );
@@ -78,7 +82,6 @@ class Detalles extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       onSelected: (value) {
-        // Manejar la opción seleccionada
         if (value == 'Categorías') {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const ListaCategorias()));
@@ -118,11 +121,35 @@ class _ListaCategoriasState extends State<ListaCategorias> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF4C60AF),
+                Color.fromARGB(255, 37, 195, 248),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0, // No shadow
+            title: const Center(
+              child: Text(
+                'Categorías',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: BlocBuilder<CategoriaBloc, EstadoCategoria>(
         builder: (context, state) {
           if (state is EstadoCargarCategorias) {
             categorias = state.categorias;
-
             return ListView.builder(
               itemCount: categorias.length,
               itemBuilder: (context, index) {
@@ -162,6 +189,29 @@ class _ListaResponsablesState extends State<ListaResponsables> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF4C60AF),
+                Color.fromARGB(255, 37, 195, 248),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text(
+              'Responsables',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ),
       body: BlocBuilder<ResponsableBloc, EstadoResponsable>(
         builder: (context, state) {
           if (state is EstadoCargarResponsables) {
@@ -169,21 +219,19 @@ class _ListaResponsablesState extends State<ListaResponsables> {
             return ListView.builder(
               itemCount: responsablessss.length,
               itemBuilder: (context, index) {
-                final responsable1 = responsablessss[index];
+                final categoria1 = responsablessss[index];
                 return ListTile(
-                  title: Text(responsable1.nombre),
+                  title: Text(categoria1.nombre),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(responsable1.direccion),
-                      Text(responsable1.telefono)
+                      Text(categoria1.direccion),
+                      Text(categoria1.telefono),
                     ],
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      context.read<ResponsableBloc>().add(EventoEliminarResponsable(responsable1.id!));
-                    },
+                    onPressed: () {},
                   ),
                 );
               },
@@ -587,16 +635,18 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
               itemCount: vehiculos.length,
               itemBuilder: (context, index) {
                 final vehiculo = vehiculos[index];
-                return ListTile(
-                  title: Text(vehiculo.placa),
-                  subtitle: Text(vehiculo.modelo),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      context
-                          .read<BlocVehiculo>()
-                          .add(EventoEliminarVehiculo(vehiculo.id!));
-                    },
+                return Card(
+                  child: ListTile(
+                    title: Text(vehiculo.placa),
+                    subtitle: Text(vehiculo.modelo),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        context
+                            .read<BlocVehiculo>()
+                            .add(EventoEliminarVehiculo(vehiculo.id!));
+                      },
+                    ),
                   ),
                 );
               },
@@ -616,6 +666,45 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
   }
 }
 
+void selectYear(BuildContext context, TextEditingController controller) async {
+  int? selectedYear = await showDialog<int>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Selecciona el año'),
+        content: SizedBox(
+          width: 200.0,
+          child: YearPicker(
+            firstDate: DateTime(DateTime.now().year - 70),
+            lastDate: DateTime(DateTime.now().year + 1),
+            selectedDate: DateTime.now(),
+            onChanged: (DateTime year) {
+              Navigator.of(context).pop(year.year);
+            },
+          ),
+        ),
+      );
+    },
+  );
+
+  if (selectedYear != null) {
+    controller.text = '$selectedYear';
+  }
+}
+
+Widget seleccionadorAnio(
+    BuildContext context, TextEditingController controller) {
+  return TextFormField(
+    readOnly: true,
+    onTap: () => selectYear(context, controller),
+    decoration: const InputDecoration(
+      labelText: 'Seleccionar año',
+      suffixIcon: Icon(Icons.calendar_today),
+    ),
+    controller: controller,
+  );
+}
+
 void agregarVehiculos(BuildContext context) {
   TextEditingController controladorPlaca = TextEditingController();
   TextEditingController controladorModelo = TextEditingController();
@@ -626,68 +715,69 @@ void agregarVehiculos(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Agregar Vehiculo'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: controladorPlaca,
-                decoration: const InputDecoration(labelText: 'Placa'),
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Agregar Vehiculo'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: controladorPlaca,
+                    decoration: const InputDecoration(
+                        labelText: 'Placa', prefixIcon: Icon(Icons.palette)),
+                  ),
+                  TextField(
+                    controller: controladorModelo,
+                    decoration: const InputDecoration(labelText: 'Modelo'),
+                  ),
+                  TextField(
+                    controller: controladorMarca,
+                    decoration: const InputDecoration(labelText: 'Marca'),
+                  ),
+                  TextField(
+                    controller: controladorTipo,
+                    decoration: const InputDecoration(labelText: 'Tipo'),
+                  ),
+                  seleccionadorAnio(context, controladorFecha),
+                ],
               ),
-              TextField(
-                controller: controladorModelo,
-                decoration: const InputDecoration(labelText: 'Modelo'),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
               ),
-              TextField(
-                controller: controladorMarca,
-                decoration: const InputDecoration(labelText: 'Marca'),
-              ),
-              TextField(
-                controller: controladorTipo,
-                decoration: const InputDecoration(labelText: 'Tipo'),
-              ),
-              TextField(
-                keyboardType: TextInputType.number,
-                controller: controladorFecha,
-                decoration: const InputDecoration(labelText: 'Fecha'),
+              ElevatedButton(
+                onPressed: () {
+                  final placaVehiculo = controladorPlaca.text;
+                  final modeloVehiculo = controladorModelo.text;
+                  final marcaVehiculo = controladorMarca.text;
+                  final tipoVehiculo = controladorTipo.text;
+                  final fechaVehiculo = controladorFecha.text;
+
+                  if (placaVehiculo.isNotEmpty &&
+                      modeloVehiculo.isNotEmpty &&
+                      marcaVehiculo.isNotEmpty &&
+                      tipoVehiculo.isNotEmpty &&
+                      fechaVehiculo.isNotEmpty) {
+                    context.read<BlocVehiculo>().add(EventoAgregarVehiculo(
+                        placaVehiculo,
+                        modeloVehiculo,
+                        marcaVehiculo,
+                        tipoVehiculo,
+                        fechaVehiculo));
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('Agregar'),
               ),
             ],
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final placaVehiculo = controladorPlaca.text;
-              final modeloVehiculo = controladorModelo.text;
-              final marcaVehiculo = controladorMarca.text;
-              final tipoVehiculo = controladorTipo.text;
-              final fechaVehiculo = controladorFecha.text;
-
-              if (placaVehiculo.isNotEmpty &&
-                  modeloVehiculo.isNotEmpty &&
-                  marcaVehiculo.isNotEmpty &&
-                  tipoVehiculo.isNotEmpty &&
-                  fechaVehiculo.isNotEmpty) {
-                context.read<BlocVehiculo>().add(EventoAgregarVehiculo(
-                    placaVehiculo,
-                    modeloVehiculo,
-                    marcaVehiculo,
-                    tipoVehiculo,
-                    fechaVehiculo));
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('Agregar'),
-          ),
-        ],
+          );
+        },
       );
     },
   );
@@ -728,6 +818,7 @@ void agregarGastos(BuildContext context) {
   final TextEditingController responsableController = TextEditingController();
   Vehiculo? vehiculoSeleccionado;
   Responsables? responsableSeleccionado;
+  bool switchValue = false;
 
   showDialog(
     context: context,
@@ -743,6 +834,7 @@ void agregarGastos(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Categorias>(
+                      width: 250,
                       label: const Text('Categoria'),
                       controller: categoriaController,
                       onSelected: (Categorias? newValue) {
@@ -763,6 +855,7 @@ void agregarGastos(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Vehiculo>(
+                      width: 250,
                       enableFilter: true,
                       label: const Text('Vehiculo'),
                       controller: vehiculoController,
@@ -775,27 +868,7 @@ void agregarGastos(BuildContext context) {
                           .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
                         return DropdownMenuEntry<Vehiculo>(
                           value: value,
-                          label: value.placa,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: DropdownMenu<Responsables>(
-                      label: const Text('Responsable'),
-                      controller: responsableController,
-                      onSelected: (Responsables? newValue) {
-                        setState(() {
-                          responsableSeleccionado = newValue;
-                        });
-                      },
-                      dropdownMenuEntries: responsablessss
-                          .map<DropdownMenuEntry<Responsables>>(
-                              (Responsables value) {
-                        return DropdownMenuEntry<Responsables>(
-                          value: value,
-                          label: value.nombre,
+                          label: '${value.placa}-${value.marca}',
                         );
                       }).toList(),
                     ),
@@ -817,10 +890,52 @@ void agregarGastos(BuildContext context) {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
+                      icon: Icon(Icons.monetization_on),
                       labelText: 'Monto',
                     ),
                     onChanged: (value) {},
                   ),
+                  const SizedBox(height: 16.0),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Alguien más se encargó del gasto...'),
+                      Switch(
+                        value: switchValue,
+                        onChanged: (value) {
+                          setState(() {
+                            switchValue = value;
+                            if (!value) {
+                              responsableSeleccionado = null;
+                              responsableController.clear();
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (switchValue)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownMenu<Responsables>(
+                        width: 250,
+                        label: const Text('Responsable'),
+                        controller: responsableController,
+                        onSelected: (Responsables? newValue) {
+                          setState(() {
+                            responsableSeleccionado = newValue;
+                          });
+                        },
+                        dropdownMenuEntries: responsablessss
+                            .map<DropdownMenuEntry<Responsables>>(
+                                (Responsables value) {
+                          return DropdownMenuEntry<Responsables>(
+                            value: value,
+                            label: value.nombre,
+                          );
+                        }).toList(),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -833,7 +948,16 @@ void agregarGastos(BuildContext context) {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // Lógica para agregar el gasto
+                  /* final categoriaGasto = categoriaSeleccionada;
+                  final vehiculoGasto = vehiculoSeleccionado;
+                  final responsableGasto = responsableSeleccionado;
+
+                  context.read<GastoBloc>().add(EventoAgregarGasto(
+                    vehiculoSeleccionado, 
+                    descripcion, 
+                    responsableSeleccionado, 
+                    fecha, 
+                    monto)); */
                 },
                 child: const Text('Agregar'),
               ),
