@@ -865,7 +865,8 @@ class _ListaGastosState extends State<ListaGastos> {
                 final gastoSeleccionado = gastos[index];
                 return Card(
                   child: ListTile(
-                    title: Text(DateTime.fromMillisecondsSinceEpoch(gastoSeleccionado.fecha).toString()),
+                    title: Text(gastoSeleccionado.categoria_nombre!),
+                    subtitle: Text(gastoSeleccionado.vehiculo_nombre!),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1121,12 +1122,18 @@ void agregarGastos(BuildContext context) {
                   if (categoriaGasto != null &&
                       vehiculoGasto != null &&
                       monto != null) {
-                        context.read<GastoBloc>().add(EventoAgregarGasto(
+                        /* context.read<GastoBloc>().add(EventoAgregarGasto(
                           vehiculoGasto.id!, 
                           categoriaGasto.id!, 
                           responsableSeleccionado!, 
                           fechaString, 
-                          monto));
+                          monto)); */
+                          context.read<GastoBloc>().add(EventoAgregarGasto2(gasto: Gastos(
+                            vehiculoID: vehiculoGasto.id!, 
+                            categoria: categoriaGasto.id!, 
+                            responsable: responsableSeleccionado!, 
+                            fecha: fechaString, 
+                            monto: monto)));
                           print('$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString');
                   }
                   Navigator.of(context).pop();

@@ -1,4 +1,4 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+// ignore_for_file: public_member_api_docs, sort_constructors_first, non_constant_identifier_names
 // import 'package:equatable/equatable.dart';
 // import 'package:flutter/foundation.dart';
 
@@ -68,13 +68,19 @@ class Vehiculo {
 class Gastos {
   late int? id;
   late int vehiculoID;
+  String? vehiculo_nombre;
   late int categoria;
+  String? categoria_nombre;
   late int responsable;
+  String? responsable_nombre;
   late int fecha;
   late double monto;
   
   Gastos({
-    this.id,  
+    this.id,
+    this.categoria_nombre,
+    this.vehiculo_nombre,
+    this.responsable_nombre,  
     required this.vehiculoID,
     required this.categoria,
     required this.responsable,

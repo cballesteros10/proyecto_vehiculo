@@ -201,8 +201,9 @@ class BaseDatos {
   } 
 
   Future<List<Map<String, dynamic>>> consultaGastos() async {
-    String consulta = 'SELECT $tablaGastos.id, $tablaGastos.categoria_id, $tablaGastos.vehiculo_id, $tablaGastos.responsable_id, $tablaGastos.fecha, $tablaGastos.monto FROM ' 
-    '$tablaGastos LEFT JOIN $tablaCategorias ON $tablaGastos.categoria_id = $tablaCategorias.id '
+    String consulta = 'SELECT $tablaGastos.id, $tablaGastos.categoria_id, $tablaGastos.vehiculo_id, $tablaGastos.responsable_id, $tablaGastos.fecha, $tablaGastos.monto, '
+    '$tablaCategorias.nombre AS categorias, $tablaResponsables.nombre AS responsables, $tablaVehiculos.placa AS placas ' 
+    'FROM $tablaGastos LEFT JOIN $tablaCategorias ON $tablaGastos.categoria_id = $tablaCategorias.id '
     'LEFT JOIN $tablaVehiculos ON $tablaGastos.vehiculo_id = $tablaVehiculos.id '
     'LEFT JOIN $tablaResponsables ON $tablaGastos.responsable_id = $tablaResponsables.id ';
     List<Map<String, dynamic>> resultado = await _basedatos.rawQuery(consulta);

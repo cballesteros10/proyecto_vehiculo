@@ -99,6 +99,12 @@ class EventoAgregarGasto extends EventoGasto {
   List<Object?> get props => [vehiculoID, categoria, responsable, fecha, monto];
 }
 
+class EventoAgregarGasto2 extends EventoGasto {
+  final Gastos gasto;
+
+  EventoAgregarGasto2({required this.gasto});
+}
+
 class EventoAgregarCategoria extends EventoCategoria {
   final String nombre;
 
@@ -139,6 +145,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
     
     on<EventoAgregarGasto>((event, emit) async {
         final gastos = await _base.consultaGastos();
+        // print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}');
         List<Gastos> lista = gastos.map((e) {
           return Gastos(
             id: e['id'],
@@ -156,6 +163,24 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
             responsable: event.responsable, 
             fecha: event.fecha, 
             monto: event.monto));    
+    });
+
+    on<EventoAgregarGasto2>((event, emit) async {
+     _base.agregarGasto2(event.gasto);
+     final gastos = await _base.consultaGastos();
+     List<Gastos> lista = gastos.map((e) {
+          return Gastos(
+            id: e['id'],
+            vehiculo_nombre: e['placas'],
+            categoria_nombre: e['categorias'],
+            responsable_nombre: e['responsables'],
+            vehiculoID: e['vehiculo_id'], 
+            categoria: e['categoria_id'], 
+            responsable: e['responsable_id'], 
+            fecha: e['fecha'], 
+            monto: e['monto']);
+        }).toList();
+     emit(EstadoCargarGasto(lista)); 
     });
   }
 }
