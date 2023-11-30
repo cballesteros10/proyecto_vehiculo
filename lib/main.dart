@@ -18,6 +18,8 @@ List<Vehiculo> vehiculos = [];
 
 List<Responsables> responsablessss = [];
 
+List<Gastos> gastos = [];
+
 class AplicacionInyectada extends StatelessWidget {
   const AplicacionInyectada({super.key});
 
@@ -157,6 +159,7 @@ class _ListaCategoriasState extends State<ListaCategorias> {
                 final categoriaSeleccionada = categorias[index];
                 return ListTile(
                   title: Text(categoriaSeleccionada.nombre),
+                  subtitle: Text(categoriaSeleccionada.id.toString()),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
@@ -237,7 +240,9 @@ class _ListaResponsablesState extends State<ListaResponsables> {
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () {},
+                    onPressed: () {
+                      context.read<ResponsableBloc>().add(EventoEliminarResponsable(categoria1.id!));
+                    },
                   ),
                 );
               },
@@ -849,11 +854,65 @@ class _ListaGastosState extends State<ListaGastos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
-        children: const [
-          ListTile(title: Text('Gasto 1')),
-          ListTile(title: Text('Gasto 2')),
-        ],
+      body: BlocBuilder<GastoBloc, EstadoGasto>(
+        builder: (context, state) {
+          if (state is EstadoCargarGasto) {
+            gastos = state.gastos;
+
+            return ListView.builder(
+              itemCount: gastos.length,
+              itemBuilder: (context, index) {
+                final gastoSeleccionado = gastos[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(DateTime.fromMillisecondsSinceEpoch(gastoSeleccionado.fecha).toString()),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirmar eliminación'),
+                                  content: const Text(
+                                      '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: const Text('Cancelar'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: const Text('Eliminar'),
+                                      onPressed: () {
+                                        context.read<GastoBloc>().add(
+                                            EventoEliminarGasto(gastoSeleccionado.vehiculoID));
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+          return const Center(child: Text('No hay gastos registrados :('));
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         label: const Text('Agregar gasto'),
@@ -872,9 +931,10 @@ void agregarGastos(BuildContext context) {
   final TextEditingController vehiculoController = TextEditingController();
   final TextEditingController responsableController = TextEditingController();
   TextEditingController controladorMonto = TextEditingController();
-  DateTime fechaSeleccionada = DateTime.now();
+  DateTime fechaSeleccionada = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  int date = fechaSeleccionada.millisecondsSinceEpoch;
   Vehiculo? vehiculoSeleccionado;
-  Responsables? responsableSeleccionado;
+  int? responsableSeleccionado;
   bool switchValue = false;
 
   showDialog(
@@ -886,12 +946,13 @@ void agregarGastos(BuildContext context) {
             title: const Text('Agregar gasto'),
             content: SingleChildScrollView(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Categorias>(
-                      width: 250,
+                      width: 220,
                       label: const Row(
                         children: [
                           Icon(Icons
@@ -920,7 +981,7 @@ void agregarGastos(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Vehiculo>(
-                      width: 250,
+                      width: 220,
                       enableFilter: true,
                       label: const Row(
                         children: [
@@ -965,11 +1026,11 @@ void agregarGastos(BuildContext context) {
                           fechaSeleccionada = fecha;
                         });
                       }
-                      return fecha;
+                      return fechaSeleccionada;
                     },
                   ),
                   const SizedBox(height: 16.0),
-                  TextField(
+                  TextFormField(
                     keyboardType: TextInputType.number,
                     controller: controladorMonto,
                     decoration: const InputDecoration(
@@ -1003,7 +1064,7 @@ void agregarGastos(BuildContext context) {
                           setState(() {
                             switchValue = value;
                             if (!value) {
-                              responsableSeleccionado = null;
+                              responsableSeleccionado = 1;
                               responsableController.clear();
                             }
                           });
@@ -1015,7 +1076,7 @@ void agregarGastos(BuildContext context) {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownMenu<Responsables>(
-                        width: 250,
+                        width: 220,
                         label: const Row(
                           children: [
                             Icon(Icons.supervised_user_circle),
@@ -1026,7 +1087,7 @@ void agregarGastos(BuildContext context) {
                         controller: responsableController,
                         onSelected: (Responsables? newValue) {
                           setState(() {
-                            responsableSeleccionado = newValue;
+                            responsableSeleccionado = newValue?.id;
                           });
                         },
                         dropdownMenuEntries: responsablessss
@@ -1054,18 +1115,19 @@ void agregarGastos(BuildContext context) {
                   final categoriaGasto = categoriaSeleccionada;
                   final vehiculoGasto = vehiculoSeleccionado;
                   final responsableGasto = responsableSeleccionado;
-                  final monto = int.tryParse(controladorMonto.text.replaceAll(',', ''));
+                  final monto = double.tryParse(controladorMonto.text.replaceAll(',', ''));
+                  final int fechaString = fechaSeleccionada.millisecondsSinceEpoch;
 
                   if (categoriaGasto != null &&
                       vehiculoGasto != null &&
                       monto != null) {
-                        /* context.read<GastoBloc>().add(EventoAgregarGasto(
-                          vehiculoGasto, 
-                          categoriaGasto, 
-                          responsableGasto, 
-                          fechaSeleccionada,
-                          monto)
-                        ); */
+                        context.read<GastoBloc>().add(EventoAgregarGasto(
+                          vehiculoGasto.id!, 
+                          categoriaGasto.id!, 
+                          responsableSeleccionado!, 
+                          fechaString, 
+                          monto));
+                          print('$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString');
                   }
                   Navigator.of(context).pop();
                 },

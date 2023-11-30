@@ -44,7 +44,7 @@ class EventoEliminarVehiculo extends EventoVehiculo {
 
 class Inicializo extends EventoVehiculo {}
 
-class EventoAgregarGasto extends EventoVehiculo {
+/* class EventoAgregarGasto extends EventoVehiculo {
   final int vehiculoID;
   final String descripcion;
   final String responsable;
@@ -57,7 +57,7 @@ class EventoAgregarGasto extends EventoVehiculo {
     this.responsable, 
     this.fecha, 
     this.monto);
-}
+} */
 
 class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
   late BaseDatos _base;
@@ -77,8 +77,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       modelo: event.modelo, 
       marca: event.marca, 
       tipo: event.tipo, 
-      fecha: int.parse(event.fecha), 
-      gastos: []));
+      fecha: int.parse(event.fecha)));
       await _cargarVehiculos(emit);
     });
 
@@ -101,11 +100,10 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       modelo: event.modelo, 
       marca: event.marca, 
       tipo: event.tipo, 
-      fecha: int.parse(event.fecha), 
-      gastos: []));
+      fecha: int.parse(event.fecha)));
     } else if (event is EventoEliminarVehiculo) {
       await _base.eliminarVehiculo(event.vehiculoID);
-    } else if (event is EventoAgregarGasto) {
+    } /* else if (event is EventoAgregarGasto) {
       await _base.agregarGasto(event.vehiculoID, 
       Gastos(event.vehiculoID,
       categoria: [], 
@@ -113,7 +111,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       responsable: [], 
       fecha: event.fecha, 
       monto: event.monto));
-    }
+    } */
     yield* _mapaEstado();
   }
 
