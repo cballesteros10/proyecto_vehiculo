@@ -38,13 +38,13 @@ class AplicacionInyectada extends StatelessWidget {
           create: (context) => BlocVehiculo()..add(Inicializo()),
         ),
         BlocProvider(
-          create: (context) => CategoriaBloc(),
+          create: (context) => CategoriaBloc()..add(Inicializo3()),
         ),
         BlocProvider(
-          create: (context) => ResponsableBloc(),
+          create: (context) => ResponsableBloc()..add(Inicializo4()),
         ),
         BlocProvider(
-          create: (context) => GastoBloc(),
+          create: (context) => GastoBloc()..add(Inicializo2()),
         )
       ],
       child: const MainApp(),
@@ -830,6 +830,14 @@ void agregarVehiculos(BuildContext context) {
                   final tipoVehiculo = controladorTipo.text;
                   final fechaVehiculo = controladorFecha.text;
 
+                  if (!validarCampo(context, placaVehiculo) || 
+                  !validarCampo(context, modeloVehiculo) || 
+                  !validarCampo(context, marcaVehiculo) || 
+                  !validarCampo(context, tipoVehiculo) ||
+                  !validarCampo(context, fechaVehiculo)) {
+                    return;
+                  }
+
                   if (placaVehiculo.isNotEmpty &&
                       modeloVehiculo.isNotEmpty &&
                       marcaVehiculo.isNotEmpty &&
@@ -843,6 +851,20 @@ void agregarVehiculos(BuildContext context) {
                         fechaVehiculo));
                     Navigator.of(context).pop();
                   }
+                    AlertDialog(
+                      title: const Text(
+                                            'Campos vacios'),
+                                        content: const Text(
+                                            'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('Cancelar'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                    );
                 },
                 child: const Text('Agregar'),
               ),
@@ -1190,4 +1212,41 @@ class ListaConsultas extends StatelessWidget {
       ],
     );
   }
+}
+
+final RegExp noEmojiRegExp = RegExp(
+    r'^[a-zA-Z0-9!"#\$%&\()*+,-./:;<=>?@[\\\]^_`{|}~\s]*$',
+  );
+  
+bool validarCampo(BuildContext context, String texto){
+  if (texto.trim().isEmpty) {
+    mostrarError(context, 'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.');
+    return false;
+  }
+
+
+  if(!noEmojiRegExp.hasMatch(texto)){
+    mostrarError(context, 'El texto no puede contener emojis ni caracteres especiales.');
+    return false;
+  }
+
+  return true;
+}
+
+void mostrarError(BuildContext context, String mensaje){
+  showDialog(
+    context: context, 
+    builder: (BuildContext context){
+      return AlertDialog(
+        title: const Text('Error'),
+        content: Text(mensaje),
+        actions: <Widget>[
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
 }

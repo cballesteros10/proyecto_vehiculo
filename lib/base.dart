@@ -67,7 +67,7 @@ class BaseDatos {
   }
 
   Future<List<Vehiculo>> getVehiculos() async {
-    await initDatabase();
+    /* await initDatabase(); */
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaVehiculos);
 
     if(maps.isNotEmpty) {
@@ -79,6 +79,23 @@ class BaseDatos {
         marca: maps[i]['marca'], 
         tipo: maps[i]['tipo'], 
         fecha: maps[i]['fecha']);
+    });
+    } else {
+      return [];
+    }
+  }
+
+  Future<List<Gastos>> getGastos() async {
+    final List<Map<String, dynamic>> maps = await _basedatos.query(tablaGastos);
+
+    if(maps.isNotEmpty) {
+      return List.generate(maps.length, (i) {
+      return Gastos(
+        vehiculoID: maps[i]['vehiculo_id'], 
+        categoria: maps[i]['categoria_id'], 
+        responsable: maps[i]['responsable_id'], 
+        fecha: maps[i]['fecha'], 
+        monto: maps[i]['monto']);
     });
     } else {
       return [];

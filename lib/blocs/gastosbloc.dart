@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:proyecto_vehiculos/base.dart';
+import 'package:proyecto_vehiculos/main.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:equatable/equatable.dart';
 // import 'package:sqflite/sqflite.dart';
@@ -11,16 +12,32 @@ abstract class EstadoGasto extends Equatable{
   List<Object?> get props => [];
 }
 
+class InicioGasto extends EstadoGasto {}
+
 abstract class EstadoCategoria extends Equatable {
   final List<Categorias> categorias;
 
   const EstadoCategoria(this.categorias);
 }
 
+class InicioCategoria extends EstadoCategoria {
+  const InicioCategoria(super.categorias);
+
+  @override
+  List<Object?> get props => [];
+}
+
 abstract class EstadoResponsable extends Equatable {
   final List<Responsables> responsables;
 
   const EstadoResponsable(this.responsables);
+}
+
+class InicioResponsables extends EstadoResponsable {
+  const InicioResponsables(super.responsables);
+
+  @override
+  List<Object?> get props => [];
 }
 
 class CargandoCategoria extends EstadoCategoria {
@@ -72,6 +89,8 @@ abstract class EventoGasto extends Equatable {
   List<Object?> get props => [];
 }
 
+class Inicializo2 extends EventoGasto {}
+
 abstract class EventoCategoria extends Equatable {
   const EventoCategoria();
 
@@ -79,12 +98,16 @@ abstract class EventoCategoria extends Equatable {
   List<Object?> get props => [];
 }
 
+class Inicializo3 extends EventoCategoria {}
+
 abstract class EventoResponsable extends Equatable {
   const EventoResponsable();
 
   @override
   List<Object?> get props => [];
 }
+
+class Inicializo4 extends EventoResponsable {}
 
 class EventoAgregarGasto extends EventoGasto {
   final int vehiculoID;
@@ -139,10 +162,16 @@ class EventoEliminarResponsable extends EventoResponsable {
 
 class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
   late BaseDatos _base;
+  List<Gastos> _listaInicialGastos = [];
 
   GastoBloc() : super(CargarGastos()) {
     _base = BaseDatos();
-    
+
+    on<Inicializo2>((event, emit) async {
+      _listaInicialGastos = await _base.getGastos();
+      emit(EstadoCargarGasto(_listaInicialGastos));
+    });
+
     on<EventoAgregarGasto>((event, emit) async {
         final gastos = await _base.consultaGastos();
         // print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}');
@@ -192,9 +221,15 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
 class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
   late BaseDatos _base;
+  List<Categorias> _listaInicialCategorias = [];
 
   CategoriaBloc() : super(const CargandoCategoria([])) {
     _base = BaseDatos();
+
+  on<Inicializo3>((event, emit) async {
+    _listaInicialCategorias = await _base.getCategorias();
+    emit(EstadoCargarCategorias(_listaInicialCategorias));
+  });
 
   on<EventoAgregarCategoria>((event, emit) async {
       emit(const EstadoCargarCategorias([]));
@@ -235,9 +270,15 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
 
 class ResponsableBloc extends Bloc<EventoResponsable, EstadoResponsable> {
   late BaseDatos _base;
+  List<Responsables> _listaInicialResponsables = [];
 
   ResponsableBloc() : super(const CargandoResponsable([])) {
     _base = BaseDatos();
+
+    on<Inicializo4>((event, emit) async {
+      _listaInicialResponsables = await _base.getResponsables();
+      emit(EstadoCargarResponsables(_listaInicialResponsables));
+    });
 
   on<EventoAgregarResponsable>((event, emit) async {
       await _base.agregarResponsable(Responsables(
