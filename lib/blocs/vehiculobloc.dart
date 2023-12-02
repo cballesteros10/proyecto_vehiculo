@@ -42,32 +42,28 @@ class EventoEliminarVehiculo extends EventoVehiculo {
   EventoEliminarVehiculo(this.vehiculoID);
 }
 
-class Inicializo extends EventoVehiculo {}
-
-/* class EventoAgregarGasto extends EventoVehiculo {
-  final int vehiculoID;
-  final String descripcion;
-  final String responsable;
+class EventoEditarVehiculo extends EventoVehiculo {
+  final String placa;
+  final String modelo;
+  final String marca;
+  final String tipo;
   final String fecha;
-  final double monto;
+  final int vehiculoID;
 
-  EventoAgregarGasto(
-    this.vehiculoID, 
-    this.descripcion, 
-    this.responsable, 
-    this.fecha, 
-    this.monto);
-} */
+  EventoEditarVehiculo(this.placa, this.modelo, this.marca, this.tipo, this.fecha, this.vehiculoID);
+}
+
+class Inicializo extends EventoVehiculo {}
 
 class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
   late BaseDatos _base;
+   List<Vehiculo> _listaInicial = [];
 
   BlocVehiculo() : super(Cargando([])) {
     _base = BaseDatos();
     on<Inicializo>((event, emit) async {
-      await Future.delayed(const Duration(seconds: 1), () {
-        _cargarVehiculos(emit);
-      });
+      _listaInicial = await _base.getVehiculos();
+      emit(EstadoCargarVehiculos(_listaInicial));
     });
 
     on<EventoAgregarVehiculo>((event, emit) async {
@@ -83,6 +79,17 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
 
     on<EventoEliminarVehiculo>((event, emit) async {
       await _base.eliminarVehiculo(event.vehiculoID);
+      await _cargarVehiculos(emit);
+    });
+
+    on<EventoEditarVehiculo>((event, emit) async {
+      await _base.editarVehiculo(
+        event.placa, 
+        event.modelo, 
+        event.marca, 
+        event.tipo, 
+        int.parse(event.fecha),
+        event.vehiculoID);
       await _cargarVehiculos(emit);
     });
   }

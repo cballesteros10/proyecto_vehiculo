@@ -14,7 +14,7 @@ class BaseDatos {
   static const String tablaCategorias = 'categorias';
   static const String tablaResponsables = 'responsables';
 
-  Future<void> _initDatabase() async {
+  Future<void> initDatabase() async {
     _basedatos = await openDatabase(
       join(await getDatabasesPath(), nombre_db),
       onCreate: (db, version) async {
@@ -67,7 +67,7 @@ class BaseDatos {
   }
 
   Future<List<Vehiculo>> getVehiculos() async {
-    await _initDatabase();
+    await initDatabase();
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaVehiculos);
 
     if(maps.isNotEmpty) {
@@ -86,7 +86,7 @@ class BaseDatos {
   }
 
   Future<List<Categorias>> getCategorias() async {
-    await _initDatabase();
+    // await _initDatabase();
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaCategorias);
 
     if(maps.isNotEmpty) {
@@ -101,7 +101,7 @@ class BaseDatos {
   }
 
   Future<List<Responsables>> getResponsables() async {
-    await _initDatabase();
+    // await _initDatabase();
     final List<Map<String, dynamic>> maps = await _basedatos.query(tablaResponsables);
 
     if(maps.isNotEmpty) {
@@ -118,34 +118,34 @@ class BaseDatos {
   }
 
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
   }
 
   Future<void> agregarVehiculo2(Vehiculo vehiculo) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.rawInsert('INSERT INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)', 
     [vehiculo.placa, vehiculo.modelo, vehiculo.marca, vehiculo.tipo, vehiculo.fecha]);
   }
 
   Future<void> agregarCategoria(Categorias categorias) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.insert(tablaCategorias, categorias.miMapaCategorias());
   }
 
   Future<void> agregarCategoria2(Categorias categorias) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.rawInsert('INSERT INTO $tablaCategorias (nombre) VALUES (?)', [categorias.nombre]);
   }
 
   Future<void> agregarResponsable(Responsables responsables) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.rawInsert('INSERT INTO $tablaResponsables (nombre, direccion, telefono) VALUES (?, ?, ?)', 
     [responsables.nombre, responsables.direccion, responsables.telefono]);
   }
 
   Future<void> agregarResponsable2(Responsables responsables) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.insert(tablaResponsables, responsables.miMapaResponsables());
   }
 
@@ -160,6 +160,10 @@ class BaseDatos {
     await _basedatos.delete(tablaGastos, where: 'vehiculo_id = ?', whereArgs: [vehiculoID]);
   }
 
+  Future<void> eliminarGasto(int gastoID) async {
+    await _basedatos.delete(tablaGastos, where: 'id = ?', whereArgs: [gastoID]);
+  }
+
   Future<void> eliminarCategotia(int categoriaID) async {
     //await _initDatabase();
     await _basedatos.delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
@@ -172,8 +176,13 @@ class BaseDatos {
     /* await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [responsableID]); */
   }
 
+  Future<void> editarVehiculo(String placa, String modelo, String marca, String tipo, int fecha, int id) async {
+    await _basedatos.rawUpdate('UPDATE $tablaVehiculos SET placa = ?, modelo = ?, marca = ?, tipo = ?, fecha = ? WHERE id = ?',
+    [placa, modelo, marca, tipo, fecha, id]);
+  }
+
   Future<void> agregarGasto(Gastos gastos) async {
-    await _initDatabase();
+    // await _initDatabase();
     await _basedatos.insert(tablaGastos, gastos.miMapaGastos());
   }
 

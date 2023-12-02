@@ -120,9 +120,9 @@ class EventoAgregarResponsable extends EventoResponsable {
 }
 
 class EventoEliminarGasto extends EventoGasto {
-  final int vehiculoID;
+  final int gastoID;
 
-  const EventoEliminarGasto(this.vehiculoID);  
+  const EventoEliminarGasto(this.gastoID);  
 }
 
 class EventoEliminarCategoria extends EventoCategoria {
@@ -181,6 +181,11 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
             monto: e['monto']);
         }).toList();
      emit(EstadoCargarGasto(lista)); 
+    });
+
+    on<EventoEliminarGasto>((event, emit) async {
+      await _base.eliminarGasto(event.gastoID);
+      await _base.consultaGastos();
     });
   }
 }

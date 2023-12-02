@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:proyecto_vehiculos/blocs/gastosbloc.dart';
-// import 'package:proyecto_vehiculos/base.dart';
+import 'package:proyecto_vehiculos/base.dart';
 import 'package:proyecto_vehiculos/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  await BaseDatos().initDatabase();
   runApp(const AplicacionInyectada());
 }
 
@@ -29,7 +35,7 @@ class AplicacionInyectada extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => BlocVehiculo(),
+          create: (context) => BlocVehiculo()..add(Inicializo()),
         ),
         BlocProvider(
           create: (context) => CategoriaBloc(),
@@ -54,7 +60,7 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
         title: 'MyCarApp',
         debugShowCheckedModeBanner: false,
-        home: Scaffold(appBar: MiAppBar(), body: MisTabs()));
+        home: Scaffold(appBar: MiAppBar(), body: TabsRemix()));
   }
 }
 
@@ -140,12 +146,10 @@ class _ListaCategoriasState extends State<ListaCategorias> {
           child: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0, // No shadow
-            title: const Center(
-              child: Text(
+            title: const Text(
                 'Categorías',
                 style: TextStyle(color: Colors.white),
               ),
-            ),
           ),
         ),
       ),
@@ -454,178 +458,61 @@ class Ayuda extends StatelessWidget {
   }
 }
 
-class MisTabs extends StatefulWidget {
-  const MisTabs({super.key});
+class TabsRemix extends StatefulWidget {
+  const TabsRemix({super.key});
 
   @override
-  MisTabsState createState() => MisTabsState();
+  // ignore: library_private_types_in_public_api
+  _TabsRemixState createState() => _TabsRemixState();
 }
 
-class MisTabsState extends State<MisTabs> {
-  List<String> data = ['Vehículos', 'Gastos', 'Consultas'];
-  int initPosition = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: SafeArea(
-      child: CustomTabView(
-          initPosition: initPosition,
-          itemCount: data.length,
-          tabBuilder: (context, index) => Tab(text: data[index]),
-          pageBuilder: (context, index) {
-            switch (index) {
-              case 0:
-                return const ListaVehiculos();
-              case 1:
-                return const ListaGastos();
-              case 2:
-                return const ListaConsultas();
-              default:
-                return Container();
-            }
-          }),
-    ));
-  }
-}
-
-class CustomTabView extends StatefulWidget {
-  const CustomTabView({
-    super.key,
-    required this.itemCount,
-    required this.tabBuilder,
-    required this.pageBuilder,
-    this.stub,
-    this.onPositionChange,
-    this.onScroll,
-    this.initPosition,
-  });
-
-  final int itemCount;
-  final IndexedWidgetBuilder tabBuilder;
-  final IndexedWidgetBuilder pageBuilder;
-  final Widget? stub;
-  final ValueChanged<int>? onPositionChange;
-  final ValueChanged<double>? onScroll;
-  final int? initPosition;
-
-  @override
-  CustomTabsState createState() => CustomTabsState();
-}
-
-class CustomTabsState extends State<CustomTabView>
-    with TickerProviderStateMixin {
-  late TabController controller;
-  late int _currentCount;
-  late int _currentPosition;
+class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
-    _currentPosition = widget.initPosition ?? 0;
-    controller = TabController(
-      length: widget.itemCount,
-      vsync: this,
-      initialIndex: _currentPosition,
-    );
-    controller.addListener(onPositionChange);
-    _currentCount = widget.itemCount;
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
-  void didUpdateWidget(CustomTabView oldWidget) {
-    if (_currentCount != widget.itemCount) {
-      controller.removeListener(onPositionChange);
-      controller.dispose();
-
-      if (widget.initPosition != null) {
-        _currentPosition = widget.initPosition!;
-      }
-
-      if (_currentPosition > widget.itemCount - 1) {
-        _currentPosition = widget.itemCount - 1;
-        _currentPosition = _currentPosition < 0 ? 0 : _currentPosition;
-        if (widget.onPositionChange is ValueChanged<int>) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && widget.onPositionChange != null) {
-              widget.onPositionChange!(_currentPosition);
-            }
-          });
-        }
-      }
-
-      _currentCount = widget.itemCount;
-      setState(() {
-        controller = TabController(
-          length: widget.itemCount,
-          vsync: this,
-          initialIndex: _currentPosition,
-        );
-        controller.addListener(onPositionChange);
-      });
-    } else if (widget.initPosition != null) {
-      controller.animateTo(widget.initPosition!);
-    }
-
-    super.didUpdateWidget(oldWidget);
-  }
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Card(
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            indicatorColor: Color.fromARGB(255, 112, 65, 197),
+            labelColor: const Color.fromARGB(255, 0, 140, 255),
+            unselectedLabelColor: const Color.fromARGB(255, 155, 155, 155), 
+            tabs: const [
+              Tab(text: 'Vehículos'),
+              Tab(text: 'Gastos'),
+              Tab(text: 'Consultas'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                Center(child: ListaVehiculos()),
+                Center(child: ListaGastos()),
+                Center(child: ListaConsultas()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   @override
   void dispose() {
-    controller.removeListener(onPositionChange);
-    controller.dispose();
+    _tabController.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.itemCount < 1) return widget.stub ?? Container();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Container(
-          alignment: Alignment.center,
-          child: TabBar(
-            isScrollable: true,
-            controller: controller,
-            labelColor: Theme.of(context).primaryColor,
-            unselectedLabelColor: Theme.of(context).hintColor,
-            indicator: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).primaryColor,
-                  width: 2,
-                ),
-              ),
-            ),
-            tabs: List.generate(
-              widget.itemCount,
-              (index) => widget.tabBuilder(context, index),
-            ),
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: controller,
-            children: List.generate(
-              widget.itemCount,
-              (index) => widget.pageBuilder(context, index),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void onPositionChange() {
-    if (!controller.indexIsChanging) {
-      _currentPosition = controller.index;
-      if (widget.onPositionChange is ValueChanged<int>) {
-        widget.onPositionChange!(_currentPosition);
-      }
     }
-  }
 }
 
 class ListaVehiculos extends StatefulWidget {
@@ -636,84 +523,208 @@ class ListaVehiculos extends StatefulWidget {
 }
 
 class _ListaVehiculosState extends State<ListaVehiculos> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Vehiculo> filteredVehiculos = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<BlocVehiculo, EstadoVehiculo>(
-        builder: (context, state) {
-          if (state is EstadoCargarVehiculos) {
-            vehiculos = state.vehiculos;
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Buscar vehículo...',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+  filteredVehiculos = vehiculos
+    .where((vehiculo) =>
+      vehiculo.placa.toLowerCase().contains(value.toLowerCase()) ||
+      vehiculo.modelo.toLowerCase().contains(value.toLowerCase()) ||
+      vehiculo.marca.toLowerCase().contains(value.toLowerCase()) ||
+      vehiculo.tipo.toLowerCase().contains(value.toLowerCase()) ||
+      vehiculo.fecha.toString().toLowerCase().contains(value.toLowerCase()))
+    .toList();
+});
+              },
+            ),
+          ),
+          BlocBuilder<BlocVehiculo, EstadoVehiculo>(
+            builder: (context, state) {
+              if (state is EstadoCargarVehiculos) {
+                vehiculos = state.vehiculos;
 
-            return ListView.builder(
-              itemCount: vehiculos.length,
-              itemBuilder: (context, index) {
-                final vehiculo = vehiculos[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                        '${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Text(vehiculo.marca), Text(vehiculo.tipo)],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {},
+                final List<Vehiculo> vehiculosToDisplay =
+                    filteredVehiculos.isNotEmpty
+                        ? filteredVehiculos
+                        : vehiculos;
+
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: vehiculosToDisplay.length,
+                    itemBuilder: (context, index) {
+                      final vehiculo = vehiculosToDisplay[index];
+                      return Card(
+                        child: ListTile(
+                          title: Text(
+                              '${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(vehiculo.marca),
+                              Text(vehiculo.tipo),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  editarVehiculo(context, vehiculo);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text(
+                                            'Confirmar eliminación'),
+                                        content: const Text(
+                                            '¿Está seguro de eliminar este vehículo? Se eliminara de forma permanente.'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('Cancelar'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          TextButton(
+                                            child: const Text('Eliminar'),
+                                            onPressed: () {
+                                              context.read<BlocVehiculo>().add(
+                                                  EventoEliminarVehiculo(
+                                                      vehiculo.id!));
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Confirmar eliminación'),
-                                  content: const Text(
-                                      '¿Está seguro de eliminar este vehículo? Se eliminara de forma permanente.'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      child: const Text('Cancelar'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                    TextButton(
-                                      child: const Text('Eliminar'),
-                                      onPressed: () {
-                                        context.read<BlocVehiculo>().add(
-                                            EventoEliminarVehiculo(
-                                                vehiculo.id!));
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 );
-              },
-            );
-          }
-          return const Center(child: Text('No hay vehículos registrados :('));
-        },
+              }
+              return const Center(
+                  child: Text('No hay vehículos registrados :('));
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         label: const Text('Agregar vehículo'),
-        icon: const Icon(Icons.add_box_rounded),
+        icon: const Icon(Icons.add),
         onPressed: () {
           agregarVehiculos(context);
         },
       ),
     );
   }
+}
+
+void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
+  TextEditingController controladorPlacaE = TextEditingController();
+  TextEditingController controladorModeloE = TextEditingController();
+  TextEditingController controladorMarcaE = TextEditingController();
+  TextEditingController controladorTipoE = TextEditingController();
+  TextEditingController controladorFechaE = TextEditingController();
+  controladorPlacaE.text = vehiculo.placa;
+  controladorModeloE.text = vehiculo.modelo;
+  controladorMarcaE.text = vehiculo.marca;
+  controladorTipoE.text = vehiculo.tipo;
+  controladorFechaE.text = vehiculo.fecha.toString();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Editar Vehiculo'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: controladorPlacaE,
+                    decoration: const InputDecoration(
+                        labelText: 'Placa', prefixIcon: Icon(Icons.rectangle)),
+                  ),
+                  TextField(
+                    controller: controladorModeloE,
+                    decoration: const InputDecoration(
+                        labelText: 'Modelo',
+                        hintText: 'Versa, Corolla, etc...',
+                        prefixIcon: Icon(Icons.car_rental)),
+                  ),
+                  TextField(
+                    controller: controladorMarcaE,
+                    decoration: const InputDecoration(
+                        labelText: 'Marca',
+                        hintText: 'Nissan, Toyota, etc...',
+                        prefixIcon: Icon(Icons.check)),
+                  ),
+                  TextField(
+                    controller: controladorTipoE,
+                    decoration: const InputDecoration(
+                        labelText: 'Tipo',
+                        hintText: 'Carro, camioneta, etc...',
+                        prefixIcon: Icon(Icons.type_specimen)),
+                  ),
+                  seleccionadorAnio(context, controladorFechaE),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<BlocVehiculo>().add(EventoEditarVehiculo(
+                    controladorPlacaE.text, 
+                    controladorModeloE.text, 
+                    controladorMarcaE.text, 
+                    controladorTipoE.text, 
+                    controladorFechaE.text, 
+                    vehiculo.id!));
+                    Navigator.of(context).pop();
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
 
 void selectYear(BuildContext context, TextEditingController controller) async {
@@ -895,7 +906,7 @@ class _ListaGastosState extends State<ListaGastos> {
                                       child: const Text('Eliminar'),
                                       onPressed: () {
                                         context.read<GastoBloc>().add(
-                                            EventoEliminarGasto(gastoSeleccionado.vehiculoID));
+                                            EventoEliminarGasto(gastoSeleccionado.id!));
                                         Navigator.of(context).pop();
                                       },
                                     ),
