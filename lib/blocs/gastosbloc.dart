@@ -154,6 +154,22 @@ class EventoEliminarCategoria extends EventoCategoria {
   const EventoEliminarCategoria(this.categoriaID);
 }
 
+class EventoEditarCategoria extends EventoCategoria {
+  final String nombre;
+  final int categoriaID;
+
+  EventoEditarCategoria(this.nombre, this.categoriaID);
+}
+
+class EventoEditarResponsable extends EventoResponsable {
+  final String nombre;
+  final String direccion;
+  final String telefono;
+  final int responsableID;
+
+  EventoEditarResponsable(this.nombre, this.direccion, this.telefono, this.responsableID);
+}
+
 class EventoEliminarResponsable extends EventoResponsable {
   final int responsableID;
 
@@ -174,7 +190,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoAgregarGasto>((event, emit) async {
         final gastos = await _base.consultaGastos();
-        // print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}');
+        print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}');
         List<Gastos> lista = gastos.map((e) {
           return Gastos(
             id: e['id'],
@@ -242,6 +258,13 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
       await _base.eliminarCategotia(event.categoriaID);
       await _cargarCategorias(emit);
     });
+
+    on<EventoEditarCategoria>((event, emit) async {
+      await _base.editarCategoria(
+        event.nombre, 
+        event.categoriaID);
+      await _cargarCategorias(emit);      
+    });
 }
 
   Future<void> _cargarCategorias(Emitter<EstadoCategoria> emit) async {
@@ -290,6 +313,15 @@ class ResponsableBloc extends Bloc<EventoResponsable, EstadoResponsable> {
 
   on<EventoEliminarResponsable>((event, emit) async {
       await _base.eliminarResponsable(event.responsableID);
+      await _cargarResponsables(emit);
+    });
+
+    on<EventoEditarResponsable>((event, emit) async {
+      await _base.editarResponsable(
+        event.nombre, 
+        event.direccion, 
+        event.telefono, 
+        event.responsableID);
       await _cargarResponsables(emit);
     });
 }

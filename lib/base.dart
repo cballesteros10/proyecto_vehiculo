@@ -31,14 +31,14 @@ class BaseDatos {
         await db.execute(
           'CREATE TABLE $tablaGastos('
           'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-          'categoria_id INTEGER,'
-          'vehiculo_id INTEGER,'
-          'responsable_id INTEGER,'
+          'categoria_id INTEGER DEFAULT 1,'
+          'vehiculo_id INTEGER DEFAULT 0,'
+          'responsable_id INTEGER DEFAULT 1,'
           'fecha INTEGER,'
           'monto REAL,'
-          'FOREIGN KEY (categoria_id) REFERENCES $tablaCategorias (id),'
-          'FOREIGN KEY (responsable_id) REFERENCES $tablaResponsables (id),'
-          'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id));'
+          'FOREIGN KEY (categoria_id) REFERENCES $tablaCategorias (id) ON DELETE SET DEFAULT,'
+          'FOREIGN KEY (responsable_id) REFERENCES $tablaResponsables (id) ON DELETE SET DEFAULT,'
+          'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id) ON DELETE SET DEFAULT);'
         );
 
         await db.execute(
@@ -48,7 +48,7 @@ class BaseDatos {
         );
 
         await db.execute(
-          "INSERT INTO $tablaCategorias (nombre) VALUES ('General');"
+          "INSERT INTO $tablaCategorias (nombre) VALUES ('Sin categoría');"
         );
 
         await db.execute(
@@ -196,6 +196,16 @@ class BaseDatos {
   Future<void> editarVehiculo(String placa, String modelo, String marca, String tipo, int fecha, int id) async {
     await _basedatos.rawUpdate('UPDATE $tablaVehiculos SET placa = ?, modelo = ?, marca = ?, tipo = ?, fecha = ? WHERE id = ?',
     [placa, modelo, marca, tipo, fecha, id]);
+  }
+
+  Future<void> editarCategoria(String nombre, int id) async {
+    await _basedatos.rawUpdate('UPDATE $tablaCategorias SET nombre = ? WHERE id = ?',
+    [nombre, id]);
+  }
+
+  Future<void> editarResponsable(String nombre, String direccion, String telefono, int id) async {
+    await _basedatos.rawUpdate('UPDATE $tablaResponsables SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?',
+    [nombre, direccion, telefono, id]);
   }
 
   Future<void> agregarGasto(Gastos gastos) async {

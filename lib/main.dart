@@ -147,9 +147,9 @@ class _ListaCategoriasState extends State<ListaCategorias> {
             backgroundColor: Colors.transparent,
             elevation: 0, // No shadow
             title: const Text(
-                'Categorías',
-                style: TextStyle(color: Colors.white),
-              ),
+              'Categorías',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ),
       ),
@@ -164,14 +164,50 @@ class _ListaCategoriasState extends State<ListaCategorias> {
                 return ListTile(
                   title: Text(categoriaSeleccionada.nombre),
                   subtitle: Text(categoriaSeleccionada.id.toString()),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      if (categoriaSeleccionada.id != null) {
-                        context.read<CategoriaBloc>().add(
-                            EventoEliminarCategoria(categoriaSeleccionada.id!));
-                      }
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  editarCategoria(context, categoriaSeleccionada);
+                                },
+                              ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirmar eliminación'),
+                                content: const Text(
+                                    '¿Está seguro de eliminar esta categoria? Se eliminará de forma permanente.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('Cancelar'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  ElevatedButton(
+                                    child: const Text('Eliminar'),
+                                    onPressed: () {
+                                      if (categoriaSeleccionada.id != null) {
+                                        context.read<CategoriaBloc>().add(
+                                            EventoEliminarCategoria(
+                                                categoriaSeleccionada.id!));
+                                      }
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
@@ -189,6 +225,58 @@ class _ListaCategoriasState extends State<ListaCategorias> {
       ),
     );
   }
+}
+
+void editarCategoria(BuildContext context, Categorias categorias) {
+  TextEditingController controladorNombreE = TextEditingController();
+  controladorNombreE.text = categorias.nombre;
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Editar Categoría'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: controladorNombreE,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.abc)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      final nombreCategoria = controladorNombreE.text;
+                      if (nombreCategoria.isNotEmpty) {
+                        context.read<CategoriaBloc>().add(EventoEditarCategoria(
+                          controladorNombreE.text, 
+                          categorias.id!));
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text('Guardar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class ListaResponsables extends StatefulWidget {
@@ -232,21 +320,57 @@ class _ListaResponsablesState extends State<ListaResponsables> {
             return ListView.builder(
               itemCount: responsablessss.length,
               itemBuilder: (context, index) {
-                final categoria1 = responsablessss[index];
+                final responsableSeleccionado = responsablessss[index];
                 return ListTile(
-                  title: Text(categoria1.nombre),
+                  title: Text(responsableSeleccionado.nombre),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(categoria1.direccion),
-                      Text(categoria1.telefono),
+                      Text(responsableSeleccionado.direccion),
+                      Text(responsableSeleccionado.telefono),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      context.read<ResponsableBloc>().add(EventoEliminarResponsable(categoria1.id!));
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          editarResponsable(context, responsableSeleccionado);
+                        }, 
+                        icon: const Icon(Icons.edit)),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirmar eliminación'),
+                                content: const Text(
+                                    '¿Está seguro de eliminar este responsable? Se eliminara de forma permanente.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('Cancelar'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  ElevatedButton(
+                                    child: const Text('Eliminar'),
+                                    onPressed: () {
+                                      context.read<ResponsableBloc>().add(
+                                          EventoEliminarResponsable(
+                                              responsableSeleccionado.id!));
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
@@ -267,6 +391,83 @@ class _ListaResponsablesState extends State<ListaResponsables> {
   }
 }
 
+void editarResponsable(BuildContext context, Responsables responsables) {
+  TextEditingController controladorNombreE = TextEditingController();
+  TextEditingController controladorDireccionE = TextEditingController();
+  TextEditingController controladorTelefonoE = TextEditingController();
+  controladorDireccionE.text = responsables.direccion;
+  controladorNombreE.text = responsables.nombre;
+  controladorTelefonoE.text = responsables.telefono;
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Editar Responsable'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: controladorNombreE,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre', 
+                  prefixIcon: Icon(Icons.account_circle)),
+              ),
+              TextField(
+                controller: controladorDireccionE,
+                decoration: const InputDecoration(
+                  labelText: 'Direccion',
+                  prefixIcon: Icon(Icons.location_on)),
+              ),
+              TextField(
+                keyboardType: TextInputType.number,
+                maxLength: 10,
+                controller: controladorTelefonoE,
+                decoration: const InputDecoration(
+                  labelText: 'Telefono',
+                  prefixIcon: Icon(Icons.local_phone)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      final nombreResponsable = controladorNombreE.text;
+                      final direccionResponsable = controladorDireccionE.text;
+                      final telefonoResponsable = controladorTelefonoE.text;
+
+                      if (nombreResponsable.isNotEmpty &&
+                          direccionResponsable.isNotEmpty &&
+                          telefonoResponsable.isNotEmpty) {
+                        context.read<ResponsableBloc>().add(EventoEditarResponsable(
+                          nombreResponsable, 
+                          direccionResponsable, 
+                          telefonoResponsable, 
+                          responsables.id!));
+                      }
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Guardar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 void mostrarAgregarCategoria(BuildContext context) {
   TextEditingController controladorNombre = TextEditingController();
 
@@ -281,12 +482,21 @@ void mostrarAgregarCategoria(BuildContext context) {
             children: <Widget>[
               TextField(
                 controller: controladorNombre,
-                decoration: const InputDecoration(labelText: 'Nombre'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.abc)),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 20),
                   ElevatedButton(
                     onPressed: () {
                       final nombreCategoria = controladorNombre.text;
@@ -298,13 +508,6 @@ void mostrarAgregarCategoria(BuildContext context) {
                       }
                     },
                     child: const Text('Agregar'),
-                  ),
-                  const SizedBox(width: 20),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancelar'),
                   ),
                 ],
               ),
@@ -332,22 +535,35 @@ void mostrarAgregarResponsable(BuildContext context) {
             children: <Widget>[
               TextField(
                 controller: controladorNombre,
-                decoration: const InputDecoration(labelText: 'Nombre'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.account_circle)),
               ),
               TextField(
                 controller: controladorDireccion,
-                decoration: const InputDecoration(labelText: 'Direccion'),
+                decoration: const InputDecoration(
+                  labelText: 'Direccion',
+                  prefixIcon: Icon(Icons.location_on)),
               ),
               TextField(
                 keyboardType: TextInputType.number,
                 maxLength: 10,
                 controller: controladorTelefono,
-                decoration: const InputDecoration(labelText: 'Telefono'),
+                decoration: const InputDecoration(
+                  labelText: 'Telefono',
+                  prefixIcon: Icon(Icons.local_phone)),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 20),
                   ElevatedButton(
                     onPressed: () {
                       final nombreResponsable = controladorNombre.text;
@@ -364,13 +580,6 @@ void mostrarAgregarResponsable(BuildContext context) {
                       Navigator.of(context).pop();
                     },
                     child: const Text('Agregar'),
-                  ),
-                  const SizedBox(width: 20),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancelar'),
                   ),
                 ],
               ),
@@ -476,43 +685,43 @@ class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMix
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: Card(
-      child: Column(
-        children: [
-          TabBar(
-            controller: _tabController,
-            indicatorColor: Color.fromARGB(255, 112, 65, 197),
-            labelColor: const Color.fromARGB(255, 0, 140, 255),
-            unselectedLabelColor: const Color.fromARGB(255, 155, 155, 155), 
-            tabs: const [
-              Tab(text: 'Vehículos'),
-              Tab(text: 'Gastos'),
-              Tab(text: 'Consultas'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Card(
+        child: Column(
+          children: [
+            TabBar(
               controller: _tabController,
-              children: const [
-                Center(child: ListaVehiculos()),
-                Center(child: ListaGastos()),
-                Center(child: ListaConsultas()),
+              indicatorColor: Color.fromARGB(255, 112, 65, 197),
+              labelColor: const Color.fromARGB(255, 0, 140, 255),
+              unselectedLabelColor: const Color.fromARGB(255, 155, 155, 155),
+              tabs: const [
+                Tab(text: 'Vehículos'),
+                Tab(text: 'Gastos'),
+                Tab(text: 'Consultas'),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: const [
+                  Center(child: ListaVehiculos()),
+                  Center(child: ListaGastos()),
+                  Center(child: ListaConsultas()),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-    }
+  }
 }
 
 class ListaVehiculos extends StatefulWidget {
@@ -524,7 +733,7 @@ class ListaVehiculos extends StatefulWidget {
 
 class _ListaVehiculosState extends State<ListaVehiculos> {
   final TextEditingController _searchController = TextEditingController();
-  List<Vehiculo> filteredVehiculos = [];
+  List<Vehiculo> vehiculosFiltrados = [];
 
   @override
   Widget build(BuildContext context) {
@@ -532,35 +741,38 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Buscar vehículo...',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                setState(() {
-  filteredVehiculos = vehiculos
-    .where((vehiculo) =>
-      vehiculo.placa.toLowerCase().contains(value.toLowerCase()) ||
-      vehiculo.modelo.toLowerCase().contains(value.toLowerCase()) ||
-      vehiculo.marca.toLowerCase().contains(value.toLowerCase()) ||
-      vehiculo.tipo.toLowerCase().contains(value.toLowerCase()) ||
-      vehiculo.fecha.toString().toLowerCase().contains(value.toLowerCase()))
-    .toList();
-});
-              },
-            ),
-          ),
+  padding: const EdgeInsets.all(8.0),
+  child: TextField(
+    controller: _searchController,
+    decoration: InputDecoration(
+      hintText: 'Buscar vehículo...',
+      prefixIcon: const Icon(Icons.search),
+      suffixText: 'Vehículos: ${vehiculosFiltrados.length}',
+      suffixStyle: const TextStyle(color: Colors.grey),
+    ),
+    onChanged: (value) {
+      setState(() {
+        vehiculosFiltrados = vehiculos
+            .where((vehiculo) =>
+                vehiculo.placa.toLowerCase().contains(value.toLowerCase()) ||
+                vehiculo.modelo.toLowerCase().contains(value.toLowerCase()) ||
+                vehiculo.marca.toLowerCase().contains(value.toLowerCase()) ||
+                vehiculo.tipo.toLowerCase().contains(value.toLowerCase()) ||
+                vehiculo.fecha.toString().toLowerCase().contains(value.toLowerCase()))
+            .toList();
+      });
+    },
+  ),
+),
+
           BlocBuilder<BlocVehiculo, EstadoVehiculo>(
             builder: (context, state) {
               if (state is EstadoCargarVehiculos) {
                 vehiculos = state.vehiculos;
 
                 final List<Vehiculo> vehiculosToDisplay =
-                    filteredVehiculos.isNotEmpty
-                        ? filteredVehiculos
+                    vehiculosFiltrados.isNotEmpty
+                        ? vehiculosFiltrados
                         : vehiculos;
 
                 return Expanded(
@@ -595,8 +807,8 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        title: const Text(
-                                            'Confirmar eliminación'),
+                                        title:
+                                            const Text('Confirmar eliminación'),
                                         content: const Text(
                                             '¿Está seguro de eliminar este vehículo? Se eliminara de forma permanente.'),
                                         actions: <Widget>[
@@ -606,7 +818,7 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                                               Navigator.of(context).pop();
                                             },
                                           ),
-                                          TextButton(
+                                          ElevatedButton(
                                             child: const Text('Eliminar'),
                                             onPressed: () {
                                               context.read<BlocVehiculo>().add(
@@ -630,14 +842,14 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                 );
               }
               return const Center(
-                  child: Text('No hay vehículos registrados :('));
+                  child: CircularProgressIndicator());
             },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        label: const Text('Agregar vehículo'),
-        icon: const Icon(Icons.add),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
         onPressed: () {
           agregarVehiculos(context);
         },
@@ -693,7 +905,7 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                     decoration: const InputDecoration(
                         labelText: 'Tipo',
                         hintText: 'Carro, camioneta, etc...',
-                        prefixIcon: Icon(Icons.type_specimen)),
+                        prefixIcon: Icon(Icons.local_shipping_outlined)),
                   ),
                   seleccionadorAnio(context, controladorFechaE),
                 ],
@@ -709,13 +921,13 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
               ElevatedButton(
                 onPressed: () {
                   context.read<BlocVehiculo>().add(EventoEditarVehiculo(
-                    controladorPlacaE.text, 
-                    controladorModeloE.text, 
-                    controladorMarcaE.text, 
-                    controladorTipoE.text, 
-                    controladorFechaE.text, 
-                    vehiculo.id!));
-                    Navigator.of(context).pop();
+                      controladorPlacaE.text,
+                      controladorModeloE.text,
+                      controladorMarcaE.text,
+                      controladorTipoE.text,
+                      controladorFechaE.text,
+                      vehiculo.id!));
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Guardar'),
               ),
@@ -809,7 +1021,7 @@ void agregarVehiculos(BuildContext context) {
                     decoration: const InputDecoration(
                         labelText: 'Tipo',
                         hintText: 'Carro, camioneta, etc...',
-                        prefixIcon: Icon(Icons.type_specimen)),
+                        prefixIcon: Icon(Icons.local_shipping_outlined)),
                   ),
                   seleccionadorAnio(context, controladorFecha),
                 ],
@@ -830,11 +1042,11 @@ void agregarVehiculos(BuildContext context) {
                   final tipoVehiculo = controladorTipo.text;
                   final fechaVehiculo = controladorFecha.text;
 
-                  if (!validarCampo(context, placaVehiculo) || 
-                  !validarCampo(context, modeloVehiculo) || 
-                  !validarCampo(context, marcaVehiculo) || 
-                  !validarCampo(context, tipoVehiculo) ||
-                  !validarCampo(context, fechaVehiculo)) {
+                  if (!validarCampo(context, placaVehiculo) ||
+                      !validarCampo(context, modeloVehiculo) ||
+                      !validarCampo(context, marcaVehiculo) ||
+                      !validarCampo(context, tipoVehiculo) ||
+                      !validarCampo(context, fechaVehiculo)) {
                     return;
                   }
 
@@ -851,20 +1063,19 @@ void agregarVehiculos(BuildContext context) {
                         fechaVehiculo));
                     Navigator.of(context).pop();
                   }
-                    AlertDialog(
-                      title: const Text(
-                                            'Campos vacios'),
-                                        content: const Text(
-                                            'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('Cancelar'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                    );
+                  AlertDialog(
+                    title: const Text('Campos vacios'),
+                    content: const Text(
+                        'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.'),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Cancelar'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
                 },
                 child: const Text('Agregar'),
               ),
@@ -884,73 +1095,121 @@ class ListaGastos extends StatefulWidget {
 }
 
 class _ListaGastosState extends State<ListaGastos> {
+  final TextEditingController _buscarGastos = TextEditingController();
+  List<Gastos> gastosFiltrados = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<GastoBloc, EstadoGasto>(
-        builder: (context, state) {
-          if (state is EstadoCargarGasto) {
-            gastos = state.gastos;
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _buscarGastos,
+              decoration: InputDecoration(
+                hintText: 'Buscar gasto...',
+                prefixIcon: const Icon(Icons.search),
+                suffixText: 'Gastos: ${gastosFiltrados.length}',
+                suffixStyle: const TextStyle(color: Colors.grey),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  gastosFiltrados = gastos
+                      .where((gasto) =>
+                          gasto.categoria_nombre!.toLowerCase().contains(value.toLowerCase()) ||
+                          gasto.vehiculo_nombre!.toLowerCase().contains(value.toLowerCase()) ||
+                          gasto.monto.toString().toLowerCase().contains(value.toLowerCase()))
+                      .toList();
+                });
+              },
+            ),
+          ),
+          BlocBuilder<GastoBloc, EstadoGasto>(
+            builder: (context, state) {
+              if (state is EstadoCargarGasto) {
+                gastos = state.gastos;
+                
+                final List<Gastos> gastosToDisplay =
+                    gastosFiltrados.isNotEmpty 
+                    ? gastosFiltrados 
+                    : gastos;
 
-            return ListView.builder(
-              itemCount: gastos.length,
-              itemBuilder: (context, index) {
-                final gastoSeleccionado = gastos[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(gastoSeleccionado.categoria_nombre!),
-                    subtitle: Text(gastoSeleccionado.vehiculo_nombre!),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {},
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: gastosToDisplay.length,
+                    itemBuilder: (context, index) {
+                      final gasto = gastosToDisplay[index];
+                      return Card(
+                        child: ListTile(
+                          title: Text(
+                            '${gasto.categoria_nombre!} - ${gasto.vehiculo_nombre!}'
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Cantidad: ${gasto.monto.toString()}'),
+                              //Text(gasto.fecha.toString())
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  // Acción para editar el gasto
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text('Confirmar eliminación'),
+                                        content: const Text(
+                                          '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('Cancelar'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          ElevatedButton(
+                                            child: const Text('Eliminar'),
+                                            onPressed: () {
+                                              context.read<GastoBloc>().add(
+                                                EventoEliminarGasto(gasto.id!));
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Confirmar eliminación'),
-                                  content: const Text(
-                                      '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      child: const Text('Cancelar'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                    TextButton(
-                                      child: const Text('Eliminar'),
-                                      onPressed: () {
-                                        context.read<GastoBloc>().add(
-                                            EventoEliminarGasto(gastoSeleccionado.id!));
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 );
-              },
-            );
-          }
-          return const Center(child: Text('No hay gastos registrados :('));
-        },
+              }
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        label: const Text('Agregar gasto'),
-        icon: const Icon(Icons.add_box_rounded),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
         onPressed: () {
           agregarGastos(context);
         },
@@ -959,13 +1218,15 @@ class _ListaGastosState extends State<ListaGastos> {
   }
 }
 
+
 void agregarGastos(BuildContext context) {
   Categorias? categoriaSeleccionada;
   final TextEditingController categoriaController = TextEditingController();
   final TextEditingController vehiculoController = TextEditingController();
   final TextEditingController responsableController = TextEditingController();
   TextEditingController controladorMonto = TextEditingController();
-  DateTime fechaSeleccionada = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime fechaSeleccionada =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   int date = fechaSeleccionada.millisecondsSinceEpoch;
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
@@ -989,10 +1250,8 @@ void agregarGastos(BuildContext context) {
                       width: 220,
                       label: const Row(
                         children: [
-                          Icon(Icons
-                              .category),
-                          SizedBox(
-                              width: 8),
+                          Icon(Icons.category),
+                          SizedBox(width: 8),
                           Text('Categoría'),
                         ],
                       ),
@@ -1042,9 +1301,7 @@ void agregarGastos(BuildContext context) {
                   ),
                   DateTimeField(
                     decoration: const InputDecoration(
-                      labelText: 'Fecha', 
-                      icon: Icon(Icons.calendar_month)
-                    ),
+                        labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
                     format: DateFormat(DateFormat.YEAR_MONTH_DAY),
                     onShowPicker: (context, currentValue) async {
                       final fecha = await showDatePicker(
@@ -1054,7 +1311,7 @@ void agregarGastos(BuildContext context) {
                         firstDate: DateTime(2010),
                         lastDate: DateTime.now(),
                       );
-                      
+
                       if (fecha != null) {
                         setState(() {
                           fechaSeleccionada = fecha;
@@ -1106,7 +1363,7 @@ void agregarGastos(BuildContext context) {
                       ),
                     ],
                   ),
-                  if (switchValue) 
+                  if (switchValue)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownMenu<Responsables>(
@@ -1149,25 +1406,29 @@ void agregarGastos(BuildContext context) {
                   final categoriaGasto = categoriaSeleccionada;
                   final vehiculoGasto = vehiculoSeleccionado;
                   final responsableGasto = responsableSeleccionado;
-                  final monto = double.tryParse(controladorMonto.text.replaceAll(',', ''));
-                  final int fechaString = fechaSeleccionada.millisecondsSinceEpoch;
+                  final monto = double.tryParse(
+                      controladorMonto.text.replaceAll(',', ''));
+                  final int fechaString =
+                      fechaSeleccionada.millisecondsSinceEpoch;
 
                   if (categoriaGasto != null &&
                       vehiculoGasto != null &&
                       monto != null) {
-                        /* context.read<GastoBloc>().add(EventoAgregarGasto(
+                    /* context.read<GastoBloc>().add(EventoAgregarGasto(
                           vehiculoGasto.id!, 
                           categoriaGasto.id!, 
                           responsableSeleccionado!, 
                           fechaString, 
                           monto)); */
-                          context.read<GastoBloc>().add(EventoAgregarGasto2(gasto: Gastos(
-                            vehiculoID: vehiculoGasto.id!, 
-                            categoria: categoriaGasto.id!, 
-                            responsable: responsableSeleccionado!, 
-                            fecha: fechaString, 
+                    context.read<GastoBloc>().add(EventoAgregarGasto2(
+                        gasto: Gastos(
+                            vehiculoID: vehiculoGasto.id!,
+                            categoria: categoriaGasto.id!,
+                            responsable: responsableSeleccionado!,
+                            fecha: fechaString,
                             monto: monto)));
-                          print('$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString');
+                    print(
+                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString');
                   }
                   Navigator.of(context).pop();
                 },
@@ -1215,35 +1476,38 @@ class ListaConsultas extends StatelessWidget {
 }
 
 final RegExp noEmojiRegExp = RegExp(
-    r'^[a-zA-Z0-9!"#\$%&\()*+,-./:;<=>?@[\\\]^_`{|}~\s]*$',
-  );
-  
-bool validarCampo(BuildContext context, String texto){
+  r'^[a-zA-Z0-9!"#\$%&\()*+,-./:;<=>?@[\\\]^_`{|}~\s]*$',
+);
+
+bool validarCampo(BuildContext context, String texto) {
   if (texto.trim().isEmpty) {
-    mostrarError(context, 'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.');
+    mostrarError(context,
+        'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.');
     return false;
   }
 
-
-  if(!noEmojiRegExp.hasMatch(texto)){
-    mostrarError(context, 'El texto no puede contener emojis ni caracteres especiales.');
+  if (!noEmojiRegExp.hasMatch(texto)) {
+    mostrarError(
+        context, 'El texto no puede contener emojis ni caracteres especiales.');
     return false;
   }
 
   return true;
 }
 
-void mostrarError(BuildContext context, String mensaje){
+void mostrarError(BuildContext context, String mensaje) {
   showDialog(
-    context: context, 
-    builder: (BuildContext context){
+    context: context,
+    builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Error'),
         content: Text(mensaje),
         actions: <Widget>[
-          TextButton(onPressed: (){
-            Navigator.of(context).pop();
-          }, child: const Text('OK'),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
           ),
         ],
       );
