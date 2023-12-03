@@ -64,14 +64,14 @@ class EstadoCargarGasto extends EstadoGasto {
 }
 
 class EstadoCargarCategorias extends EstadoCategoria {
-  const EstadoCargarCategorias(List<Categorias> categorias) : super(categorias);
+  const EstadoCargarCategorias(super.categorias);
 
   @override
   List<Object?> get props => [categorias];  
 }
 
 class EstadoCargarResponsables extends EstadoResponsable {
-  const EstadoCargarResponsables(List<Responsables> responsables) : super(responsables);
+  const EstadoCargarResponsables(super.responsables);
 
   @override
   List<Object?> get props => [responsables];
@@ -125,7 +125,7 @@ class EventoAgregarGasto extends EventoGasto {
 class EventoAgregarGasto2 extends EventoGasto {
   final Gastos gasto;
 
-  EventoAgregarGasto2({required this.gasto});
+  const EventoAgregarGasto2({required this.gasto});
 }
 
 class EventoAgregarCategoria extends EventoCategoria {
@@ -158,7 +158,7 @@ class EventoEditarCategoria extends EventoCategoria {
   final String nombre;
   final int categoriaID;
 
-  EventoEditarCategoria(this.nombre, this.categoriaID);
+  const EventoEditarCategoria(this.nombre, this.categoriaID);
 }
 
 class EventoEditarResponsable extends EventoResponsable {
@@ -167,7 +167,7 @@ class EventoEditarResponsable extends EventoResponsable {
   final String telefono;
   final int responsableID;
 
-  EventoEditarResponsable(this.nombre, this.direccion, this.telefono, this.responsableID);
+  const EventoEditarResponsable(this.nombre, this.direccion, this.telefono, this.responsableID);
 }
 
 class EventoEliminarResponsable extends EventoResponsable {
@@ -190,7 +190,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoAgregarGasto>((event, emit) async {
         final gastos = await _base.consultaGastos();
-        print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}');
+        /* print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}'); */
         List<Gastos> lista = gastos.map((e) {
           return Gastos(
             id: e['id'],

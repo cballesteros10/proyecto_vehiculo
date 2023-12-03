@@ -18,7 +18,7 @@ class Cargando extends EstadoVehiculo {
 }
 
 class EstadoCargarVehiculos extends EstadoVehiculo {
-  EstadoCargarVehiculos(List<Vehiculo> vehiculos) : super(vehiculos);
+  EstadoCargarVehiculos(super.vehiculos);
   
   @override
   List<Object?> get props => [];

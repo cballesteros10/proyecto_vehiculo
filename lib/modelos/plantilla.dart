@@ -100,9 +100,9 @@ class Gastos {
   Map<String, dynamic> miMapaGastos() {
     return {
       'id' : id,
-      'vehiculo_id' : vehiculoID,
-      'categoria_id' : categoria,
-      'responsable_id' : responsable,
+      'vehiculo_nombre' : vehiculoID,
+      'categoria_nombre' : categoria,
+      'responsable_nombre' : responsable,
       'fecha' : fecha,
       'monto' : monto
     };

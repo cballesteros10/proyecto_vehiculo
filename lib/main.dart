@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
+import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,7 +66,7 @@ class MainApp extends StatelessWidget {
 }
 
 class MiAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const MiAppBar({Key? key}) : super(key: key);
+  const MiAppBar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -85,7 +86,7 @@ class MiAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class Detalles extends StatelessWidget {
-  const Detalles({Key? key}) : super(key: key);
+  const Detalles({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -168,11 +169,11 @@ class _ListaCategoriasState extends State<ListaCategorias> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  editarCategoria(context, categoriaSeleccionada);
-                                },
-                              ),
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          editarCategoria(context, categoriaSeleccionada);
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
@@ -243,8 +244,7 @@ void editarCategoria(BuildContext context, Categorias categorias) {
               TextField(
                 controller: controladorNombreE,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  prefixIcon: Icon(Icons.abc)),
+                    labelText: 'Nombre', prefixIcon: Icon(Icons.abc)),
               ),
               const SizedBox(height: 20),
               Row(
@@ -260,12 +260,12 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                   ElevatedButton(
                     onPressed: () {
                       final nombreCategoria = controladorNombreE.text;
-                      if (nombreCategoria.isNotEmpty) {
+                        if (!validarCampo(context, nombreCategoria)) {
+                          return;
+                        }
                         context.read<CategoriaBloc>().add(EventoEditarCategoria(
-                          controladorNombreE.text, 
-                          categorias.id!));
+                            controladorNombreE.text, categorias.id!));
                         Navigator.of(context).pop();
-                      }
                     },
                     child: const Text('Guardar'),
                   ),
@@ -334,10 +334,10 @@ class _ListaResponsablesState extends State<ListaResponsables> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: () {
-                          editarResponsable(context, responsableSeleccionado);
-                        }, 
-                        icon: const Icon(Icons.edit)),
+                          onPressed: () {
+                            editarResponsable(context, responsableSeleccionado);
+                          },
+                          icon: const Icon(Icons.edit)),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
@@ -411,22 +411,21 @@ void editarResponsable(BuildContext context, Responsables responsables) {
               TextField(
                 controller: controladorNombreE,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre', 
-                  prefixIcon: Icon(Icons.account_circle)),
+                    labelText: 'Nombre',
+                    prefixIcon: Icon(Icons.account_circle)),
               ),
               TextField(
                 controller: controladorDireccionE,
                 decoration: const InputDecoration(
-                  labelText: 'Direccion',
-                  prefixIcon: Icon(Icons.location_on)),
+                    labelText: 'Direccion',
+                    prefixIcon: Icon(Icons.location_on)),
               ),
               TextField(
                 keyboardType: TextInputType.number,
                 maxLength: 10,
                 controller: controladorTelefonoE,
                 decoration: const InputDecoration(
-                  labelText: 'Telefono',
-                  prefixIcon: Icon(Icons.local_phone)),
+                    labelText: 'Telefono', prefixIcon: Icon(Icons.local_phone)),
               ),
               const SizedBox(height: 20),
               Row(
@@ -445,14 +444,21 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                       final direccionResponsable = controladorDireccionE.text;
                       final telefonoResponsable = controladorTelefonoE.text;
 
+                      if (!validarCampo(context, nombreResponsable) ||
+                          !validarCampo(context, direccionResponsable) ||
+                          !validarCampo(context, telefonoResponsable)) {
+                        return;
+                      }
+
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
                           telefonoResponsable.isNotEmpty) {
-                        context.read<ResponsableBloc>().add(EventoEditarResponsable(
-                          nombreResponsable, 
-                          direccionResponsable, 
-                          telefonoResponsable, 
-                          responsables.id!));
+                        context.read<ResponsableBloc>().add(
+                            EventoEditarResponsable(
+                                nombreResponsable,
+                                direccionResponsable,
+                                telefonoResponsable,
+                                responsables.id!));
                       }
                       Navigator.of(context).pop();
                     },
@@ -483,8 +489,7 @@ void mostrarAgregarCategoria(BuildContext context) {
               TextField(
                 controller: controladorNombre,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  prefixIcon: Icon(Icons.abc)),
+                    labelText: 'Nombre', prefixIcon: Icon(Icons.abc)),
               ),
               const SizedBox(height: 20),
               Row(
@@ -500,12 +505,13 @@ void mostrarAgregarCategoria(BuildContext context) {
                   ElevatedButton(
                     onPressed: () {
                       final nombreCategoria = controladorNombre.text;
-                      if (nombreCategoria.isNotEmpty) {
-                        context
-                            .read<CategoriaBloc>()
-                            .add(EventoAgregarCategoria(nombreCategoria));
-                        Navigator.of(context).pop();
+                      if (!validarCampo(context, nombreCategoria)) {
+                        return;
                       }
+                      context
+                          .read<CategoriaBloc>()
+                          .add(EventoAgregarCategoria(nombreCategoria));
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Agregar'),
                   ),
@@ -536,22 +542,21 @@ void mostrarAgregarResponsable(BuildContext context) {
               TextField(
                 controller: controladorNombre,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  prefixIcon: Icon(Icons.account_circle)),
+                    labelText: 'Nombre',
+                    prefixIcon: Icon(Icons.account_circle)),
               ),
               TextField(
                 controller: controladorDireccion,
                 decoration: const InputDecoration(
-                  labelText: 'Direccion',
-                  prefixIcon: Icon(Icons.location_on)),
+                    labelText: 'Direccion',
+                    prefixIcon: Icon(Icons.location_on)),
               ),
               TextField(
                 keyboardType: TextInputType.number,
                 maxLength: 10,
                 controller: controladorTelefono,
                 decoration: const InputDecoration(
-                  labelText: 'Telefono',
-                  prefixIcon: Icon(Icons.local_phone)),
+                    labelText: 'Telefono', prefixIcon: Icon(Icons.local_phone)),
               ),
               const SizedBox(height: 20),
               Row(
@@ -569,6 +574,12 @@ void mostrarAgregarResponsable(BuildContext context) {
                       final nombreResponsable = controladorNombre.text;
                       final direccionResponsable = controladorDireccion.text;
                       final telefonoResponsable = controladorTelefono.text;
+
+                      if (!validarCampo(context, nombreResponsable) ||
+                          !validarCampo(context, direccionResponsable) ||
+                          !validarCampo(context, telefonoResponsable)) {
+                        return;
+                      }
 
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
@@ -692,7 +703,7 @@ class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMix
           children: [
             TabBar(
               controller: _tabController,
-              indicatorColor: Color.fromARGB(255, 112, 65, 197),
+              indicatorColor: const Color.fromARGB(255, 112, 65, 197),
               labelColor: const Color.fromARGB(255, 0, 140, 255),
               unselectedLabelColor: const Color.fromARGB(255, 155, 155, 155),
               tabs: const [
@@ -704,9 +715,9 @@ class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMix
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: const [
-                  Center(child: ListaVehiculos()),
-                  Center(child: ListaGastos()),
+                children: [
+                  const Center(child: ListaVehiculos()),
+                  const Center(child: ListaGastos()),
                   Center(child: ListaConsultas()),
                 ],
               ),
@@ -741,30 +752,40 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
       body: Column(
         children: [
           Padding(
-  padding: const EdgeInsets.all(8.0),
-  child: TextField(
-    controller: _searchController,
-    decoration: InputDecoration(
-      hintText: 'Buscar vehículo...',
-      prefixIcon: const Icon(Icons.search),
-      suffixText: 'Vehículos: ${vehiculosFiltrados.length}',
-      suffixStyle: const TextStyle(color: Colors.grey),
-    ),
-    onChanged: (value) {
-      setState(() {
-        vehiculosFiltrados = vehiculos
-            .where((vehiculo) =>
-                vehiculo.placa.toLowerCase().contains(value.toLowerCase()) ||
-                vehiculo.modelo.toLowerCase().contains(value.toLowerCase()) ||
-                vehiculo.marca.toLowerCase().contains(value.toLowerCase()) ||
-                vehiculo.tipo.toLowerCase().contains(value.toLowerCase()) ||
-                vehiculo.fecha.toString().toLowerCase().contains(value.toLowerCase()))
-            .toList();
-      });
-    },
-  ),
-),
-
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar vehículo...',
+                prefixIcon: const Icon(Icons.search),
+                suffixText: 'Vehículos: ${vehiculosFiltrados.length}',
+                suffixStyle: const TextStyle(color: Colors.grey),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  vehiculosFiltrados = vehiculos
+                      .where((vehiculo) =>
+                          vehiculo.placa
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          vehiculo.modelo
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          vehiculo.marca
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          vehiculo.tipo
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          vehiculo.fecha
+                              .toString()
+                              .toLowerCase()
+                              .contains(value.toLowerCase()))
+                      .toList();
+                });
+              },
+            ),
+          ),
           BlocBuilder<BlocVehiculo, EstadoVehiculo>(
             builder: (context, state) {
               if (state is EstadoCargarVehiculos) {
@@ -841,8 +862,7 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                   ),
                 );
               }
-              return const Center(
-                  child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             },
           ),
         ],
@@ -920,6 +940,14 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
               ),
               ElevatedButton(
                 onPressed: () {
+                  if (!validarCampo(context, controladorPlacaE.text) ||
+                      !validarCampo(context, controladorModeloE.text) ||
+                      !validarCampo(context, controladorMarcaE.text) ||
+                      !validarCampo(context, controladorTipoE.text) ||
+                      !validarCampo(context, controladorFechaE.text)) {
+                    return;
+                  }
+
                   context.read<BlocVehiculo>().add(EventoEditarVehiculo(
                       controladorPlacaE.text,
                       controladorModeloE.text,
@@ -1088,7 +1116,7 @@ void agregarVehiculos(BuildContext context) {
 }
 
 class ListaGastos extends StatefulWidget {
-  const ListaGastos({Key? key}) : super(key: key);
+  const ListaGastos({super.key});
 
   @override
   State<ListaGastos> createState() => _ListaGastosState();
@@ -1117,9 +1145,16 @@ class _ListaGastosState extends State<ListaGastos> {
                 setState(() {
                   gastosFiltrados = gastos
                       .where((gasto) =>
-                          gasto.categoria_nombre!.toLowerCase().contains(value.toLowerCase()) ||
-                          gasto.vehiculo_nombre!.toLowerCase().contains(value.toLowerCase()) ||
-                          gasto.monto.toString().toLowerCase().contains(value.toLowerCase()))
+                          gasto.categoria_nombre!
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          gasto.vehiculo_nombre!
+                              .toLowerCase()
+                              .contains(value.toLowerCase()) ||
+                          gasto.monto
+                              .toString()
+                              .toLowerCase()
+                              .contains(value.toLowerCase()))
                       .toList();
                 });
               },
@@ -1129,11 +1164,9 @@ class _ListaGastosState extends State<ListaGastos> {
             builder: (context, state) {
               if (state is EstadoCargarGasto) {
                 gastos = state.gastos;
-                
+
                 final List<Gastos> gastosToDisplay =
-                    gastosFiltrados.isNotEmpty 
-                    ? gastosFiltrados 
-                    : gastos;
+                    gastosFiltrados.isNotEmpty ? gastosFiltrados : gastos;
 
                 return Expanded(
                   child: ListView.builder(
@@ -1143,8 +1176,7 @@ class _ListaGastosState extends State<ListaGastos> {
                       return Card(
                         child: ListTile(
                           title: Text(
-                            '${gasto.categoria_nombre!} - ${gasto.vehiculo_nombre!}'
-                          ),
+                              '${gasto.categoria_nombre!} - ${gasto.vehiculo_nombre!}'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1168,9 +1200,10 @@ class _ListaGastosState extends State<ListaGastos> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        title: const Text('Confirmar eliminación'),
+                                        title:
+                                            const Text('Confirmar eliminación'),
                                         content: const Text(
-                                          '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
+                                            '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
                                         actions: <Widget>[
                                           TextButton(
                                             child: const Text('Cancelar'),
@@ -1182,7 +1215,9 @@ class _ListaGastosState extends State<ListaGastos> {
                                             child: const Text('Eliminar'),
                                             onPressed: () {
                                               context.read<GastoBloc>().add(
-                                                EventoEliminarGasto(gasto.id!));
+                                                  EventoEliminarGasto(
+                                                      gasto.id!));
+                                              // print('${gasto.id}');
                                               Navigator.of(context).pop();
                                             },
                                           ),
@@ -1218,7 +1253,6 @@ class _ListaGastosState extends State<ListaGastos> {
   }
 }
 
-
 void agregarGastos(BuildContext context) {
   Categorias? categoriaSeleccionada;
   final TextEditingController categoriaController = TextEditingController();
@@ -1230,7 +1264,6 @@ void agregarGastos(BuildContext context) {
   int date = fechaSeleccionada.millisecondsSinceEpoch;
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
-  bool switchValue = false;
 
   showDialog(
     context: context,
@@ -1299,6 +1332,33 @@ void agregarGastos(BuildContext context) {
                       }).toList(),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Responsables>(
+                      width: 220,
+                      label: const Row(
+                        children: [
+                          Icon(Icons.supervised_user_circle),
+                          SizedBox(width: 8),
+                          Text('Responsable'),
+                        ],
+                      ),
+                      controller: responsableController,
+                      onSelected: (Responsables? newValue) {
+                        setState(() {
+                          responsableSeleccionado = newValue?.id;
+                        });
+                      },
+                      dropdownMenuEntries: responsablessss
+                          .map<DropdownMenuEntry<Responsables>>(
+                              (Responsables value) {
+                        return DropdownMenuEntry<Responsables>(
+                          value: value,
+                          label: value.nombre,
+                        );
+                      }).toList(),
+                    ),
+                  ),
                   DateTimeField(
                     decoration: const InputDecoration(
                         labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
@@ -1344,53 +1404,6 @@ void agregarGastos(BuildContext context) {
                       }
                     },
                   ),
-                  const SizedBox(height: 16.0),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Existio un encargado?'),
-                      Switch(
-                        value: switchValue,
-                        onChanged: (value) {
-                          setState(() {
-                            switchValue = value;
-                            if (!value) {
-                              responsableSeleccionado = 1;
-                              responsableController.clear();
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  if (switchValue)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: DropdownMenu<Responsables>(
-                        width: 220,
-                        label: const Row(
-                          children: [
-                            Icon(Icons.supervised_user_circle),
-                            SizedBox(width: 8),
-                            Text('Responsable'),
-                          ],
-                        ),
-                        controller: responsableController,
-                        onSelected: (Responsables? newValue) {
-                          setState(() {
-                            responsableSeleccionado = newValue?.id;
-                          });
-                        },
-                        dropdownMenuEntries: responsablessss
-                            .map<DropdownMenuEntry<Responsables>>(
-                                (Responsables value) {
-                          return DropdownMenuEntry<Responsables>(
-                            value: value,
-                            label: value.nombre,
-                          );
-                        }).toList(),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -1414,21 +1427,15 @@ void agregarGastos(BuildContext context) {
                   if (categoriaGasto != null &&
                       vehiculoGasto != null &&
                       monto != null) {
-                    /* context.read<GastoBloc>().add(EventoAgregarGasto(
-                          vehiculoGasto.id!, 
-                          categoriaGasto.id!, 
-                          responsableSeleccionado!, 
-                          fechaString, 
-                          monto)); */
                     context.read<GastoBloc>().add(EventoAgregarGasto2(
                         gasto: Gastos(
                             vehiculoID: vehiculoGasto.id!,
                             categoria: categoriaGasto.id!,
-                            responsable: responsableSeleccionado!,
+                            responsable: responsableGasto!,
                             fecha: fechaString,
                             monto: monto)));
-                    print(
-                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString');
+                    /* print(
+                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString'); */
                   }
                   Navigator.of(context).pop();
                 },
@@ -1442,35 +1449,104 @@ void agregarGastos(BuildContext context) {
   );
 }
 
-class ListaConsultas extends StatelessWidget {
-  const ListaConsultas({super.key});
+class ListaConsultas extends StatefulWidget {
+  @override
+  _ListaConsultasState createState() => _ListaConsultasState();
+}
+
+class _ListaConsultasState extends State<ListaConsultas> {
+  late DateTime fechaInicial =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  late DateTime fechaFinal =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  List<Gastos> gastos = [];
+
+  Future<void> _seleccionarFechaInicial() async {
+    final DateTime? fechaSeleccionada = await showDatePicker(
+      context: context,
+      initialDate: fechaInicial,
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+    if (fechaSeleccionada != null) {
+      setState(() {
+        fechaInicial = fechaSeleccionada;
+      });
+      gastos = await BaseDatos()
+                        .getGastosFechas(fechaInicial, fechaFinal);
+    }
+  }
+
+  Future<void> _seleccionarFechaFinal() async {
+    final DateTime? fechaSeleccionada = await showDatePicker(
+      context: context,
+      initialDate: fechaFinal,
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+    if (fechaSeleccionada != null) {
+      setState(() {
+        fechaFinal = fechaSeleccionada;
+      });
+      gastos = await BaseDatos()
+                        .getGastosFechas(fechaInicial, fechaFinal);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              const Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.description),
-                    hintText: 'Buscar consultas...',
+    return Scaffold(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.description),
+                      hintText: 'Buscar consultas...',
+                    ),
                   ),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () async {
+                    
+                  },
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: _seleccionarFechaInicial,
+                child: const Text('Seleccionar Fecha Inicial'),
               ),
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  // print('Prueba');
-                },
+              ElevatedButton(
+                onPressed: _seleccionarFechaFinal,
+                child: const Text('Seleccionar Fecha Final'),
               ),
             ],
           ),
-        ),
-      ],
+          Text('Fecha de inicio: $fechaInicial'),
+          Text('Fecha de fin: $fechaFinal'),
+          Expanded(
+            child: ListView.builder(
+              itemCount: gastos.length,
+              itemBuilder: (context, index) {
+                final gasto = gastos[index];
+                return ListTile(
+                  title: Text('Monto: ${gasto.monto}'),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
