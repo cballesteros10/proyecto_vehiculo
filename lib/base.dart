@@ -58,7 +58,6 @@ class BaseDatos {
   }
 
   Future<List<Vehiculo>> getVehiculos() async {
-    /* await initDatabase(); */
     final List<Map<String, dynamic>> maps =
         await _basedatos.query(tablaVehiculos);
 
@@ -95,13 +94,14 @@ class BaseDatos {
   }
 
   Future<List<Categorias>> getCategorias() async {
-    // await _initDatabase();
     final List<Map<String, dynamic>> maps =
         await _basedatos.query(tablaCategorias);
 
     if (maps.isNotEmpty) {
       return List.generate(maps.length, (i) {
-        return Categorias(id: maps[i]['id'], nombre: maps[i]['nombre']);
+        return Categorias(
+          id: maps[i]['id'], 
+          nombre: maps[i]['nombre']);
       });
     } else {
       return [];
@@ -109,7 +109,6 @@ class BaseDatos {
   }
 
   Future<List<Responsables>> getResponsables() async {
-    // await _initDatabase();
     final List<Map<String, dynamic>> maps =
         await _basedatos.query(tablaResponsables);
 
@@ -127,12 +126,10 @@ class BaseDatos {
   }
 
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
-    // await _initDatabase();
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
   }
 
   Future<void> agregarVehiculo2(Vehiculo vehiculo) async {
-    // await _initDatabase();
     await _basedatos.rawInsert(
         'INSERT INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)',
         [
@@ -145,26 +142,22 @@ class BaseDatos {
   }
 
   Future<void> agregarCategoria(Categorias categorias) async {
-    // await _initDatabase();
     await _basedatos.insert(tablaCategorias, categorias.miMapaCategorias());
   }
 
   Future<void> agregarCategoria2(Categorias categorias) async {
-    // await _initDatabase();
     await _basedatos.rawInsert(
         'INSERT INTO $tablaCategorias (nombre) VALUES (?)',
         [categorias.nombre]);
   }
 
   Future<void> agregarResponsable(Responsables responsables) async {
-    // await _initDatabase();
     await _basedatos.rawInsert(
         'INSERT INTO $tablaResponsables (nombre, direccion, telefono) VALUES (?, ?, ?)',
         [responsables.nombre, responsables.direccion, responsables.telefono]);
   }
 
   Future<void> agregarResponsable2(Responsables responsables) async {
-    // await _initDatabase();
     await _basedatos.insert(
         tablaResponsables, responsables.miMapaResponsables());
   }
@@ -176,7 +169,6 @@ class BaseDatos {
   }
 
   Future<void> eliminarVehiculo(int vehiculoID) async {
-    //await _initDatabase();
     await _basedatos
         .delete(tablaVehiculos, where: 'id = ?', whereArgs: [vehiculoID]);
     await _basedatos
@@ -187,22 +179,42 @@ class BaseDatos {
     await _basedatos.delete(tablaGastos, where: 'id = ?', whereArgs: [gastoID]);
   }
 
-  Future<void> eliminarCategotia(int categoriaID) async {
-    //await _initDatabase();
-    await _basedatos
-        .delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
-    /* await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [categoriaID]); */
+Future<int> obtenerIDCategoriaPredeterminada() async {
+    final categoriaPredeterminada = 'General';
+    final resultado = await _basedatos.query(tablaCategorias,
+        where: 'nombre = ?', whereArgs: [categoriaPredeterminada]);
+
+    return resultado.isNotEmpty ? resultado.first['id']  as int: -1;
+  }
+
+
+  Future<int> obtenerIDResponsablePredeterminado() async {
+    final responsablePredeterminado = 'Usuario';
+    final resultado = await _basedatos.query(tablaResponsables,
+        where: 'nombre = ?', whereArgs: [responsablePredeterminado]);
+
+    return resultado.isNotEmpty ? resultado.first['id']  as int: -1;
+  }
+
+  Future<void> eliminarCategoria(int categoriaID) async {
+    final idCategoriaPredeterminada = await obtenerIDCategoriaPredeterminada();
+
+    if (categoriaID != idCategoriaPredeterminada) {
+      await _basedatos.delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
+      // También puedes realizar otras acciones relacionadas con la eliminación aquí
+    }
   }
 
   Future<void> eliminarResponsable(int responsableID) async {
-    //await _initDatabase();
-    await _basedatos
-        .delete(tablaResponsables, where: 'id = ?', whereArgs: [responsableID]);
-    /* await _basedatos.delete(tablaGastos, where: 'gasto_id = ?', whereArgs: [responsableID]); */
+    final idResponsablePredeterminado = await obtenerIDResponsablePredeterminado();
+
+    if (responsableID != idResponsablePredeterminado) {
+      await _basedatos.delete(tablaResponsables, where: 'id = ?', whereArgs: [responsableID]);
+      // También puedes realizar otras acciones relacionadas con la eliminación aquí
+    }
   }
 
-  Future<void> editarVehiculo(String placa, String modelo, String marca,
-      String tipo, int fecha, int id) async {
+  Future<void> editarVehiculo(String placa, String modelo, String marca, String tipo, int fecha, int id) async {
     await _basedatos.rawUpdate(
         'UPDATE $tablaVehiculos SET placa = ?, modelo = ?, marca = ?, tipo = ?, fecha = ? WHERE id = ?',
         [placa, modelo, marca, tipo, fecha, id]);
@@ -213,15 +225,13 @@ class BaseDatos {
         'UPDATE $tablaCategorias SET nombre = ? WHERE id = ?', [nombre, id]);
   }
 
-  Future<void> editarResponsable(
-      String nombre, String direccion, String telefono, int id) async {
+  Future<void> editarResponsable(String nombre, String direccion, String telefono, int id) async {
     await _basedatos.rawUpdate(
         'UPDATE $tablaResponsables SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?',
         [nombre, direccion, telefono, id]);
   }
 
   Future<void> agregarGasto(Gastos gastos) async {
-    // await _initDatabase();
     await _basedatos.insert(tablaGastos, gastos.miMapaGastos());
   }
 
@@ -265,24 +275,27 @@ class BaseDatos {
     return resultado;
   }
 
-  Future<List<Gastos>> getGastosFechas(
-      DateTime fechaInicial, DateTime fechaFinal) async {
-    final List<Map<String, dynamic>> maps = await _basedatos.query(
-      BaseDatos.tablaGastos,
-      where: 'fecha >= ? AND fecha <=?',
-      whereArgs: [
-        fechaInicial.millisecondsSinceEpoch,
-        fechaFinal.microsecondsSinceEpoch
-      ],
-    );
+  Future<List<Gastos>> getGastosFechas(DateTime fechaInicial, DateTime fechaFinal) async {
+  // Establecer la hora de inicio de la fechaInicial a las 00:00:00
+  DateTime startOfDayFechaInicial = DateTime(fechaInicial.year, fechaInicial.month, fechaInicial.day, 0, 0, 0);
 
-    return List.generate(maps.length, (i) {
-      return Gastos(
-          vehiculoID: maps[i]['vehiculo_id'],
-          categoria: maps[i]['categoria_id'],
-          responsable: maps[i]['responsable_id'],
-          fecha: maps[i]['fecha'],
-          monto: maps[i]['monto']);
-    });
-  }
+  // Establecer la hora de fin de la fechaFinal a las 23:59:59
+  DateTime endOfDayFechaFinal = DateTime(fechaFinal.year, fechaFinal.month, fechaFinal.day, 23, 59, 59);
+
+  final List<Map<String, dynamic>> maps = await _basedatos.query(
+    BaseDatos.tablaGastos,
+    where: 'fecha >= ? AND fecha <= ?',
+    whereArgs: [startOfDayFechaInicial.millisecondsSinceEpoch, endOfDayFechaFinal.millisecondsSinceEpoch],
+  );
+
+  return List.generate(maps.length, (i) {
+    return Gastos(
+      vehiculoID: maps[i]['vehiculo_id'], 
+      categoria: maps[i]['categoria_id'], 
+      responsable: maps[i]['responsable_id'], 
+      fecha: maps[i]['fecha'], 
+      monto: maps[i]['monto']
+    );
+  });
+}
 }

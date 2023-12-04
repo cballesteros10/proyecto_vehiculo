@@ -260,12 +260,12 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                   ElevatedButton(
                     onPressed: () {
                       final nombreCategoria = controladorNombreE.text;
-                        if (!validarCampo(context, nombreCategoria)) {
-                          return;
-                        }
-                        context.read<CategoriaBloc>().add(EventoEditarCategoria(
-                            controladorNombreE.text, categorias.id!));
-                        Navigator.of(context).pop();
+                      if (!validarCampo(context, nombreCategoria)) {
+                        return;
+                      }
+                      context.read<CategoriaBloc>().add(EventoEditarCategoria(
+                          controladorNombreE.text, categorias.id!));
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Guardar'),
                   ),
@@ -575,12 +575,6 @@ void mostrarAgregarResponsable(BuildContext context) {
                       final direccionResponsable = controladorDireccion.text;
                       final telefonoResponsable = controladorTelefono.text;
 
-                      if (!validarCampo(context, nombreResponsable) ||
-                          !validarCampo(context, direccionResponsable) ||
-                          !validarCampo(context, telefonoResponsable)) {
-                        return;
-                      }
-
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
                           telefonoResponsable.isNotEmpty) {
@@ -686,7 +680,8 @@ class TabsRemix extends StatefulWidget {
   _TabsRemixState createState() => _TabsRemixState();
 }
 
-class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMixin {
+class _TabsRemixState extends State<TabsRemix>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -718,7 +713,7 @@ class _TabsRemixState extends State<TabsRemix> with SingleTickerProviderStateMix
                 children: [
                   const Center(child: ListaVehiculos()),
                   const Center(child: ListaGastos()),
-                  Center(child: ListaConsultas()),
+                  const Center(child: ListaConsultas()),
                 ],
               ),
             ),
@@ -1308,7 +1303,6 @@ void agregarGastos(BuildContext context) {
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownMenu<Vehiculo>(
                       width: 220,
-                      enableFilter: true,
                       label: const Row(
                         children: [
                           Icon(Icons.directions_car),
@@ -1327,7 +1321,7 @@ void agregarGastos(BuildContext context) {
                         return DropdownMenuEntry<Vehiculo>(
                           value: value,
                           label:
-                              '${value.placa} - ${value.marca} ${value.fecha}',
+                              '${value.placa} - ${value.modelo} ${value.fecha}',
                         );
                       }).toList(),
                     ),
@@ -1450,101 +1444,131 @@ void agregarGastos(BuildContext context) {
 }
 
 class ListaConsultas extends StatefulWidget {
+  const ListaConsultas({super.key});
+
   @override
-  _ListaConsultasState createState() => _ListaConsultasState();
+  State<ListaConsultas> createState() => _ListaConsultasState();
 }
 
 class _ListaConsultasState extends State<ListaConsultas> {
-  late DateTime fechaInicial =
+  late DateTime? fechaInicial =
       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  late DateTime fechaFinal =
+  late DateTime? fechaFinal =
       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   List<Gastos> gastos = [];
 
   Future<void> _seleccionarFechaInicial() async {
-    final DateTime? fechaSeleccionada = await showDatePicker(
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: fechaInicial,
+      initialDate: DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 1),
       lastDate: DateTime(DateTime.now().year + 1),
-    );
-    if (fechaSeleccionada != null) {
+    ).then((pickedDate) {
+      if (pickedDate != null) {
+        setState(() {
+          fechaInicial = pickedDate;
+        });
+      }
+    });
+
+    if (picked != null && picked != fechaInicial) {
       setState(() {
-        fechaInicial = fechaSeleccionada;
+        fechaInicial = picked;
       });
-      gastos = await BaseDatos()
-                        .getGastosFechas(fechaInicial, fechaFinal);
     }
   }
 
   Future<void> _seleccionarFechaFinal() async {
-    final DateTime? fechaSeleccionada = await showDatePicker(
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: fechaFinal,
+      initialDate: DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 1),
       lastDate: DateTime(DateTime.now().year + 1),
-    );
-    if (fechaSeleccionada != null) {
+    ).then((pickedDate) {
+      if (pickedDate != null) {
+        setState(() {
+          fechaFinal = pickedDate;
+        });
+        _consultarGastos();
+      }
+    });
+
+    if (picked != null && picked != fechaFinal) {
       setState(() {
-        fechaFinal = fechaSeleccionada;
+        fechaFinal = picked;
       });
-      gastos = await BaseDatos()
-                        .getGastosFechas(fechaInicial, fechaFinal);
     }
+  }
+
+  Future<void> _consultarGastos() async {
+    gastos = await BaseDatos().getGastosFechas(fechaInicial!, fechaFinal!);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+     double totalGastos = 0.0;
+  for (var gasto in gastos) {
+    totalGastos += gasto.monto;
+  }
     return Scaffold(
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.description),
-                      hintText: 'Buscar consultas...',
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () async {
-                    
-                  },
-                ),
-              ],
-            ),
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(
-                onPressed: _seleccionarFechaInicial,
-                child: const Text('Seleccionar Fecha Inicial'),
+              Column(
+                children: [
+                  const Divider(),
+                  const Text('Desde: '),
+                  ElevatedButton(
+                    onPressed: () {
+                      _seleccionarFechaInicial();
+                    },
+                    child: Text(fechaInicial != null
+                        ? DateFormat('dd-MM-yyyy').format(fechaInicial!)
+                        : 'Seleccionar Fecha Inicial'),
+                  ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: _seleccionarFechaFinal,
-                child: const Text('Seleccionar Fecha Final'),
+              Column(
+                children: [
+                  const Divider(),
+                  const Text('Hasta: '),
+                  ElevatedButton(
+                    onPressed: () {
+                      _seleccionarFechaFinal();
+                    },
+                    child: Text(fechaFinal != null
+                        ? DateFormat('dd-MM-yyyy').format(fechaFinal!)
+                        : 'Seleccionar Fecha Final'),
+                  ),
+                ],
               ),
             ],
           ),
-          Text('Fecha de inicio: $fechaInicial'),
-          Text('Fecha de fin: $fechaFinal'),
+          /* Text('Fecha de inicio: $fechaInicial'),
+        Text('Fecha de fin: $fechaFinal'), */
           Expanded(
             child: ListView.builder(
               itemCount: gastos.length,
               itemBuilder: (context, index) {
                 final gasto = gastos[index];
-                return ListTile(
-                  title: Text('Monto: ${gasto.monto}'),
+                return Card(
+                  child: ListTile(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Monto: ${gasto.monto}'),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),
           ),
+          Card(elevation: 14.00,
+            child: Text('Total: \$${totalGastos.toStringAsFixed(2)}')),
         ],
       ),
     );

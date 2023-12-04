@@ -255,7 +255,7 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
   });
 
   on<EventoEliminarCategoria>((event, emit) async {
-      await _base.eliminarCategotia(event.categoriaID);
+      await _base.eliminarCategoria(event.categoriaID);
       await _cargarCategorias(emit);
     });
 
