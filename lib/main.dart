@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:proyecto_vehiculos/blocs/gastosbloc.dart';
@@ -162,53 +164,60 @@ class _ListaCategoriasState extends State<ListaCategorias> {
               itemCount: categorias.length,
               itemBuilder: (context, index) {
                 final categoriaSeleccionada = categorias[index];
-                return ListTile(
-                  title: Text(categoriaSeleccionada.nombre),
-                  subtitle: Text(categoriaSeleccionada.id.toString()),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          editarCategoria(context, categoriaSeleccionada);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Confirmar eliminación'),
-                                content: const Text(
-                                    '¿Está seguro de eliminar esta categoria? Se eliminará de forma permanente.'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Cancelar'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  ElevatedButton(
-                                    child: const Text('Eliminar'),
-                                    onPressed: () {
-                                      if (categoriaSeleccionada.id != null) {
-                                        context.read<CategoriaBloc>().add(
-                                            EventoEliminarCategoria(
-                                                categoriaSeleccionada.id!));
-                                      }
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
+                final categoriaID = categoriaSeleccionada.id;
+
+                final bool mostrarIconButtons = categoriaID != -1;
+                return Card(
+                  child: ListTile(
+                    title: Text(categoriaSeleccionada.nombre),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (mostrarIconButtons)
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              editarCategoria(context, categoriaSeleccionada);
+                            },
+                          ),
+                        if (mostrarIconButtons)
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Confirmar eliminación'),
+                                    content: const Text(
+                                        '¿Está seguro de eliminar esta categoria? Se eliminará de forma permanente.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: const Text('Cancelar'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      ElevatedButton(
+                                        child: const Text('Eliminar'),
+                                        onPressed: () {
+                                          if (categoriaSeleccionada.id !=
+                                              null) {
+                                            context.read<CategoriaBloc>().add(
+                                                EventoEliminarCategoria(
+                                                    categoriaSeleccionada.id!));
+                                          }
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -231,6 +240,17 @@ class _ListaCategoriasState extends State<ListaCategorias> {
 void editarCategoria(BuildContext context, Categorias categorias) {
   TextEditingController controladorNombreE = TextEditingController();
   controladorNombreE.text = categorias.nombre;
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarCategoriaNoRegistrada(String nombre) async {
+    final categoriaRegistrada = await BaseDatos().todasLasCategorias();
+    return !categoriaRegistrada.contains(nombre.toUpperCase());
+  }
 
   showDialog(
     context: context,
@@ -243,6 +263,18 @@ void editarCategoria(BuildContext context, Categorias categorias) {
             children: <Widget>[
               TextField(
                 controller: controladorNombreE,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorNombreE.value =
+                        controladorNombreE.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Nombre', prefixIcon: Icon(Icons.abc)),
               ),
@@ -258,9 +290,32 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                   ),
                   const SizedBox(width: 20),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final nombreCategoria = controladorNombreE.text;
                       if (!validarCampo(context, nombreCategoria)) {
+                        return;
+                      }
+
+                      bool categoriaNoRegistrada =
+                          await validarCategoriaNoRegistrada(nombreCategoria);
+                      if (!categoriaNoRegistrada) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Categoría ya registrada'),
+                              content: const Text('Ingrese otra categoría.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
                         return;
                       }
                       context.read<CategoriaBloc>().add(EventoEditarCategoria(
@@ -321,56 +376,64 @@ class _ListaResponsablesState extends State<ListaResponsables> {
               itemCount: responsablessss.length,
               itemBuilder: (context, index) {
                 final responsableSeleccionado = responsablessss[index];
-                return ListTile(
-                  title: Text(responsableSeleccionado.nombre),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(responsableSeleccionado.direccion),
-                      Text(responsableSeleccionado.telefono),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                          onPressed: () {
-                            editarResponsable(context, responsableSeleccionado);
-                          },
-                          icon: const Icon(Icons.edit)),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Confirmar eliminación'),
-                                content: const Text(
-                                    '¿Está seguro de eliminar este responsable? Se eliminara de forma permanente.'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Cancelar'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  ElevatedButton(
-                                    child: const Text('Eliminar'),
-                                    onPressed: () {
-                                      context.read<ResponsableBloc>().add(
-                                          EventoEliminarResponsable(
-                                              responsableSeleccionado.id!));
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
+                final responsableID = responsableSeleccionado.id;
+
+                final bool mostrarIconButtons = responsableID != -1;
+                return Card(
+                  child: ListTile(
+                    title: Text(responsableSeleccionado.nombre),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(responsableSeleccionado.direccion),
+                        Text(responsableSeleccionado.telefono),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (mostrarIconButtons)
+                          IconButton(
+                              onPressed: () {
+                                editarResponsable(
+                                    context, responsableSeleccionado);
+                              },
+                              icon: const Icon(Icons.edit)),
+                        if (mostrarIconButtons)
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Confirmar eliminación'),
+                                    content: const Text(
+                                        '¿Está seguro de eliminar este responsable? Se eliminara de forma permanente.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: const Text('Cancelar'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      ElevatedButton(
+                                        child: const Text('Eliminar'),
+                                        onPressed: () {
+                                          context.read<ResponsableBloc>().add(
+                                              EventoEliminarResponsable(
+                                                  responsableSeleccionado.id!));
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -398,6 +461,17 @@ void editarResponsable(BuildContext context, Responsables responsables) {
   controladorDireccionE.text = responsables.direccion;
   controladorNombreE.text = responsables.nombre;
   controladorTelefonoE.text = responsables.telefono;
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarResponsableNoRegistrado(String telefono) async {
+    final responsableRegistrado = await BaseDatos().todasLosResponsables();
+    return !responsableRegistrado.contains(telefono.toUpperCase());
+  }
 
   showDialog(
     context: context,
@@ -410,12 +484,36 @@ void editarResponsable(BuildContext context, Responsables responsables) {
             children: <Widget>[
               TextField(
                 controller: controladorNombreE,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorNombreE.value =
+                        controladorNombreE.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Nombre',
                     prefixIcon: Icon(Icons.account_circle)),
               ),
               TextField(
                 controller: controladorDireccionE,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorDireccionE.value =
+                        controladorDireccionE.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Direccion',
                     prefixIcon: Icon(Icons.location_on)),
@@ -439,14 +537,32 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                   ),
                   const SizedBox(width: 20),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final nombreResponsable = controladorNombreE.text;
                       final direccionResponsable = controladorDireccionE.text;
                       final telefonoResponsable = controladorTelefonoE.text;
 
-                      if (!validarCampo(context, nombreResponsable) ||
-                          !validarCampo(context, direccionResponsable) ||
-                          !validarCampo(context, telefonoResponsable)) {
+                      bool responsableNoRegistrado =
+                          await validarResponsableNoRegistrado(
+                              telefonoResponsable);
+                      if (!responsableNoRegistrado) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Responsable ya registrado'),
+                              content: const Text('Ingrese otro responsable.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
                         return;
                       }
 
@@ -476,6 +592,17 @@ void editarResponsable(BuildContext context, Responsables responsables) {
 
 void mostrarAgregarCategoria(BuildContext context) {
   TextEditingController controladorNombre = TextEditingController();
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarCategoriaNoRegistrada(String nombre) async {
+    final categoriaRegistrada = await BaseDatos().todasLasCategorias();
+    return !categoriaRegistrada.contains(nombre.toUpperCase());
+  }
 
   showDialog(
     context: context,
@@ -488,6 +615,17 @@ void mostrarAgregarCategoria(BuildContext context) {
             children: <Widget>[
               TextField(
                 controller: controladorNombre,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorNombre.value = controladorNombre.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Nombre', prefixIcon: Icon(Icons.abc)),
               ),
@@ -503,11 +641,35 @@ void mostrarAgregarCategoria(BuildContext context) {
                   ),
                   const SizedBox(width: 20),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final nombreCategoria = controladorNombre.text;
                       if (!validarCampo(context, nombreCategoria)) {
                         return;
                       }
+
+                      bool categoriaNoRegistrada =
+        await validarCategoriaNoRegistrada(nombreCategoria);
+    if (!categoriaNoRegistrada) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Categoría ya registrada'),
+            content: const Text('Ingrese otra categoría.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
                       context
                           .read<CategoriaBloc>()
                           .add(EventoAgregarCategoria(nombreCategoria));
@@ -529,6 +691,17 @@ void mostrarAgregarResponsable(BuildContext context) {
   TextEditingController controladorNombre = TextEditingController();
   TextEditingController controladorDireccion = TextEditingController();
   TextEditingController controladorTelefono = TextEditingController();
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarResponsableNoRegistrado(String telefono) async {
+    final responsableRegistrado = await BaseDatos().todasLosResponsables();
+    return !responsableRegistrado.contains(telefono.toUpperCase());
+  }
 
   showDialog(
     context: context,
@@ -541,12 +714,35 @@ void mostrarAgregarResponsable(BuildContext context) {
             children: <Widget>[
               TextField(
                 controller: controladorNombre,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorNombre.value = controladorNombre.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Nombre',
                     prefixIcon: Icon(Icons.account_circle)),
               ),
               TextField(
                 controller: controladorDireccion,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (value) {
+                  final newText = capitalize(value);
+                  if (value != newText) {
+                    controladorDireccion.value =
+                        controladorDireccion.value.copyWith(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
                 decoration: const InputDecoration(
                     labelText: 'Direccion',
                     prefixIcon: Icon(Icons.location_on)),
@@ -570,10 +766,34 @@ void mostrarAgregarResponsable(BuildContext context) {
                   ),
                   const SizedBox(width: 20),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final nombreResponsable = controladorNombre.text;
                       final direccionResponsable = controladorDireccion.text;
                       final telefonoResponsable = controladorTelefono.text;
+
+                      bool responsableNoRegistrado =
+                          await validarResponsableNoRegistrado(
+                              telefonoResponsable);
+                      if (!responsableNoRegistrado) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Responsable ya registrado'),
+                              content: const Text('Ingrese otro responsable.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
 
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
@@ -710,10 +930,10 @@ class _TabsRemixState extends State<TabsRemix>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: [
-                  const Center(child: ListaVehiculos()),
-                  const Center(child: ListaGastos()),
-                  const Center(child: ListaConsultas()),
+                children: const [
+                  Center(child: ListaVehiculos()),
+                  Center(child: ListaGastos()),
+                  Center(child: ListaConsultas()),
                 ],
               ),
             ),
@@ -885,6 +1105,18 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
   controladorTipoE.text = vehiculo.tipo;
   controladorFechaE.text = vehiculo.fecha.toString();
 
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarPlacaNoRegistrada(String placa) async {
+    final placaRegistrada = await BaseDatos().todosLosNombres();
+    return !placaRegistrada.contains(placa.toUpperCase());
+  }
+
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -898,18 +1130,44 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                 children: <Widget>[
                   TextField(
                     controller: controladorPlacaE,
+                    inputFormatters: [UpperCaseTextFormatter()],
                     decoration: const InputDecoration(
                         labelText: 'Placa', prefixIcon: Icon(Icons.rectangle)),
                   ),
                   TextField(
                     controller: controladorModeloE,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorModeloE.value =
+                            controladorModeloE.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
-                        labelText: 'Modelo',
-                        hintText: 'Versa, Corolla, etc...',
-                        prefixIcon: Icon(Icons.car_rental)),
+                      labelText: 'Modelo',
+                      hintText: 'Versa, Corolla, etc...',
+                      prefixIcon: Icon(Icons.car_rental),
+                    ),
                   ),
                   TextField(
                     controller: controladorMarcaE,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorMarcaE.value =
+                            controladorMarcaE.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                         labelText: 'Marca',
                         hintText: 'Nissan, Toyota, etc...',
@@ -917,6 +1175,18 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                   ),
                   TextField(
                     controller: controladorTipoE,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorTipoE.value =
+                            controladorTipoE.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                         labelText: 'Tipo',
                         hintText: 'Carro, camioneta, etc...',
@@ -934,12 +1204,35 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                 child: const Text('Cancelar'),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (!validarCampo(context, controladorPlacaE.text) ||
                       !validarCampo(context, controladorModeloE.text) ||
                       !validarCampo(context, controladorMarcaE.text) ||
                       !validarCampo(context, controladorTipoE.text) ||
                       !validarCampo(context, controladorFechaE.text)) {
+                    return;
+                  }
+
+                  bool placaNoRegistrada =
+                      await validarPlacaNoRegistrada(controladorPlacaE.text);
+                  if (!placaNoRegistrada) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Placa ya registrada'),
+                          content: const Text('Ingrese otra placa.'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                     return;
                   }
 
@@ -1008,6 +1301,17 @@ void agregarVehiculos(BuildContext context) {
   TextEditingController controladorMarca = TextEditingController();
   TextEditingController controladorTipo = TextEditingController();
   TextEditingController controladorFecha = TextEditingController();
+  String capitalize(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  Future<bool> validarPlacaNoRegistrada(String placa) async {
+    final placaRegistrada = await BaseDatos().todosLosNombres();
+    return !placaRegistrada.contains(placa.toUpperCase());
+  }
 
   showDialog(
     context: context,
@@ -1022,18 +1326,44 @@ void agregarVehiculos(BuildContext context) {
                 children: <Widget>[
                   TextField(
                     controller: controladorPlaca,
+                    inputFormatters: [UpperCaseTextFormatter()],
                     decoration: const InputDecoration(
                         labelText: 'Placa', prefixIcon: Icon(Icons.rectangle)),
                   ),
                   TextField(
                     controller: controladorModelo,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorModelo.value =
+                            controladorModelo.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
-                        labelText: 'Modelo',
-                        hintText: 'Versa, Corolla, etc...',
-                        prefixIcon: Icon(Icons.car_rental)),
+                      labelText: 'Modelo',
+                      hintText: 'Versa, Corolla, etc...',
+                      prefixIcon: Icon(Icons.car_rental),
+                    ),
                   ),
                   TextField(
                     controller: controladorMarca,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorMarca.value =
+                            controladorMarca.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                         labelText: 'Marca',
                         hintText: 'Nissan, Toyota, etc...',
@@ -1041,6 +1371,17 @@ void agregarVehiculos(BuildContext context) {
                   ),
                   TextField(
                     controller: controladorTipo,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      final newText = capitalize(value);
+                      if (value != newText) {
+                        controladorTipo.value = controladorTipo.value.copyWith(
+                          text: newText,
+                          selection:
+                              TextSelection.collapsed(offset: newText.length),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                         labelText: 'Tipo',
                         hintText: 'Carro, camioneta, etc...',
@@ -1058,7 +1399,7 @@ void agregarVehiculos(BuildContext context) {
                 child: const Text('Cancelar'),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final placaVehiculo = controladorPlaca.text;
                   final modeloVehiculo = controladorModelo.text;
                   final marcaVehiculo = controladorMarca.text;
@@ -1070,6 +1411,29 @@ void agregarVehiculos(BuildContext context) {
                       !validarCampo(context, marcaVehiculo) ||
                       !validarCampo(context, tipoVehiculo) ||
                       !validarCampo(context, fechaVehiculo)) {
+                    return;
+                  }
+
+                  bool placaNoRegistrada =
+                      await validarPlacaNoRegistrada(placaVehiculo);
+                  if (!placaNoRegistrada) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Placa ya registrada'),
+                          content: const Text('Ingrese otra placa.'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                     return;
                   }
 
@@ -1085,20 +1449,26 @@ void agregarVehiculos(BuildContext context) {
                         tipoVehiculo,
                         fechaVehiculo));
                     Navigator.of(context).pop();
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Campos vacíos'),
+                          content: const Text(
+                              'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Cancelar'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   }
-                  AlertDialog(
-                    title: const Text('Campos vacios'),
-                    content: const Text(
-                        'Existen uno o más campos vacíos que se intentaron agregar. Intentar otra vez.'),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('Cancelar'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
                 },
                 child: const Text('Agregar'),
               ),
@@ -1108,6 +1478,18 @@ void agregarVehiculos(BuildContext context) {
       );
     },
   );
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final newText = newValue.text?.toUpperCase() ?? '';
+    return TextEditingValue(
+      text: newText,
+      selection: newValue.selection,
+    );
+  }
 }
 
 class ListaGastos extends StatefulWidget {
@@ -1120,6 +1502,7 @@ class ListaGastos extends StatefulWidget {
 class _ListaGastosState extends State<ListaGastos> {
   final TextEditingController _buscarGastos = TextEditingController();
   List<Gastos> gastosFiltrados = [];
+  double totalGastosFiltrados2 = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -1151,8 +1534,33 @@ class _ListaGastosState extends State<ListaGastos> {
                               .toLowerCase()
                               .contains(value.toLowerCase()))
                       .toList();
+                  double totalGastosFiltrados = gastosFiltrados.fold(
+                    0,
+                    (previousValue, gasto) => previousValue + gasto.monto,
+                  );
+                  setState(() {
+                    totalGastosFiltrados2 = totalGastosFiltrados;
+                  });
                 });
               },
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  const Text(
+                    'Total de gastos:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    ' \$$totalGastosFiltrados2',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
           BlocBuilder<GastoBloc, EstadoGasto>(
@@ -1185,7 +1593,7 @@ class _ListaGastosState extends State<ListaGastos> {
                               IconButton(
                                 icon: const Icon(Icons.edit),
                                 onPressed: () {
-                                  // Acción para editar el gasto
+                                  editarGastos(context, gasto);
                                 },
                               ),
                               IconButton(
@@ -1248,6 +1656,206 @@ class _ListaGastosState extends State<ListaGastos> {
   }
 }
 
+void editarGastos(BuildContext context, Gastos gasto) {
+  Categorias? categoriaSeleccionada;
+  final TextEditingController categoriaControllerE = TextEditingController();
+  final TextEditingController vehiculoControllerE = TextEditingController();
+  final TextEditingController responsableControllerE = TextEditingController();
+  TextEditingController controladorMontoE = TextEditingController();
+  DateTime fechaSeleccionada =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  Vehiculo? vehiculoSeleccionado;
+  int? responsableSeleccionado;
+
+  categoriaControllerE.text = gasto.categoria_nombre!;
+  vehiculoControllerE.text = gasto.vehiculo_nombre!;
+  responsableControllerE.text = gasto.responsable_nombre!;
+  controladorMontoE.text = gasto.monto.toString();
+  // DateTime fechaSeleccionada = DateTime.parse(gasto.fecha.toString());
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Editar gasto'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Categorias>(
+                      width: 220,
+                      label: const Row(
+                        children: [
+                          Icon(Icons.category),
+                          SizedBox(width: 8),
+                          Text('Categoría'),
+                        ],
+                      ),
+                      controller: categoriaControllerE,
+                      onSelected: (Categorias? newValue) {
+                        setState(() {
+                          categoriaSeleccionada = newValue;
+                        });
+                      },
+                      dropdownMenuEntries: categorias
+                          .map<DropdownMenuEntry<Categorias>>(
+                              (Categorias value) {
+                        return DropdownMenuEntry<Categorias>(
+                          value: value,
+                          label: value.nombre,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Vehiculo>(
+                      width: 220,
+                      label: const Row(
+                        children: [
+                          Icon(Icons.directions_car),
+                          SizedBox(width: 8),
+                          Text('Vehículo'),
+                        ],
+                      ),
+                      controller: vehiculoControllerE,
+                      onSelected: (Vehiculo? newValue) {
+                        setState(() {
+                          vehiculoSeleccionado = newValue;
+                        });
+                      },
+                      dropdownMenuEntries: vehiculos
+                          .map<DropdownMenuEntry<Vehiculo>>((Vehiculo value) {
+                        return DropdownMenuEntry<Vehiculo>(
+                          value: value,
+                          label:
+                              '${value.placa} - ${value.modelo} ${value.fecha}',
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownMenu<Responsables>(
+                      width: 220,
+                      label: const Row(
+                        children: [
+                          Icon(Icons.supervised_user_circle),
+                          SizedBox(width: 8),
+                          Text('Responsable'),
+                        ],
+                      ),
+                      controller: responsableControllerE,
+                      onSelected: (Responsables? newValue) {
+                        setState(() {
+                          responsableSeleccionado = newValue?.id;
+                        });
+                      },
+                      dropdownMenuEntries: responsablessss
+                          .map<DropdownMenuEntry<Responsables>>(
+                              (Responsables value) {
+                        return DropdownMenuEntry<Responsables>(
+                          value: value,
+                          label: value.nombre,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  DateTimeField(
+                    decoration: const InputDecoration(
+                        labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
+                    format: DateFormat(DateFormat.YEAR_MONTH_DAY),
+                    onShowPicker: (context, currentValue) async {
+                      final fecha = await showDatePicker(
+                        initialDatePickerMode: DatePickerMode.day,
+                        initialDate: fechaSeleccionada,
+                        context: context,
+                        firstDate: DateTime(2010),
+                        lastDate: DateTime.now(),
+                      );
+
+                      if (fecha != null) {
+                        setState(() {
+                          fechaSeleccionada = fecha;
+                        });
+                      }
+                      return fechaSeleccionada;
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextFormField(
+                    keyboardType: TextInputType.number,
+                    controller: controladorMontoE,
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.monetization_on),
+                      labelText: 'Monto',
+                    ),
+                    onChanged: (value) {
+                      final numericValue =
+                          int.tryParse(value.replaceAll(',', ''));
+                      if (numericValue != null) {
+                        final formatter = NumberFormat('#,###');
+                        final newText = formatter.format(numericValue);
+                        if (newText != controladorMontoE.text) {
+                          controladorMontoE.value = TextEditingValue(
+                            text: newText,
+                            selection:
+                                TextSelection.collapsed(offset: newText.length),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final categoriaGasto = categoriaSeleccionada;
+                  final vehiculoGasto = vehiculoSeleccionado;
+                  final responsableGasto = responsableSeleccionado;
+                  final monto = double.tryParse(
+                      controladorMontoE.text.replaceAll(',', ''));
+                  final int fechaString =
+                      fechaSeleccionada.millisecondsSinceEpoch;
+
+                  if (categoriaGasto != null &&
+                      vehiculoGasto != null &&
+                      monto != null) {
+                    context.read<GastoBloc>().add(EventoEditarGasto(
+                        gasto: Gastos(
+                            vehiculoID: vehiculoGasto.id!,
+                            categoria: categoriaGasto.id!,
+                            responsable: responsableGasto!,
+                            fecha: fechaString,
+                            monto: monto)));
+                    /* print(
+                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString'); */
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 void agregarGastos(BuildContext context) {
   Categorias? categoriaSeleccionada;
   final TextEditingController categoriaController = TextEditingController();
@@ -1256,7 +1864,7 @@ void agregarGastos(BuildContext context) {
   TextEditingController controladorMonto = TextEditingController();
   DateTime fechaSeleccionada =
       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  int date = fechaSeleccionada.millisecondsSinceEpoch;
+  //int date = fechaSeleccionada.millisecondsSinceEpoch;
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
 
@@ -1469,6 +2077,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
           fechaInicial = pickedDate;
         });
       }
+      return null;
     });
 
     if (picked != null && picked != fechaInicial) {
@@ -1491,6 +2100,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
         });
         _consultarGastos();
       }
+      return null;
     });
 
     if (picked != null && picked != fechaFinal) {
@@ -1507,10 +2117,10 @@ class _ListaConsultasState extends State<ListaConsultas> {
 
   @override
   Widget build(BuildContext context) {
-     double totalGastos = 0.0;
-  for (var gasto in gastos) {
-    totalGastos += gasto.monto;
-  }
+    double totalGastos = 0.0;
+    for (var gasto in gastos) {
+      totalGastos += gasto.monto;
+    }
     return Scaffold(
       body: Column(
         children: [
@@ -1567,8 +2177,9 @@ class _ListaConsultasState extends State<ListaConsultas> {
               },
             ),
           ),
-          Card(elevation: 14.00,
-            child: Text('Total: \$${totalGastos.toStringAsFixed(2)}')),
+          Card(
+              elevation: 14.00,
+              child: Text('Total: \$${totalGastos.toStringAsFixed(2)}')),
         ],
       ),
     );

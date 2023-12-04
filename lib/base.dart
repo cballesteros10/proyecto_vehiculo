@@ -28,21 +28,21 @@ class BaseDatos {
 
         await db.execute('CREATE TABLE $tablaGastos('
             'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-            'categoria_id INTEGER DEFAULT 1,'
-            'vehiculo_id INTEGER DEFAULT 0,'
-            'responsable_id INTEGER DEFAULT 1,'
+            'categoria_id INTEGER DEFAULT -1,'
+            'vehiculo_id INTEGER,'
+            'responsable_id INTEGER DEFAULT -1,'
             'fecha INTEGER,'
             'monto REAL,'
             'FOREIGN KEY (categoria_id) REFERENCES $tablaCategorias (id) ON DELETE SET DEFAULT,'
             'FOREIGN KEY (responsable_id) REFERENCES $tablaResponsables (id) ON DELETE SET DEFAULT,'
-            'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id) ON DELETE SET DEFAULT);');
+            'FOREIGN KEY (vehiculo_id) REFERENCES $tablaVehiculos (id) ON DELETE CASCADE);');
 
         await db.execute('CREATE TABLE $tablaCategorias('
             'id INTEGER PRIMARY KEY AUTOINCREMENT,'
             'nombre TEXT);');
 
         await db.execute(
-            "INSERT INTO $tablaCategorias (nombre) VALUES ('Sin categoría');");
+            "INSERT INTO $tablaCategorias (id, nombre) VALUES (-1, 'General');");
 
         await db.execute('CREATE TABLE $tablaResponsables('
             'id INTEGER PRIMARY KEY AUTOINCREMENT,'
@@ -51,7 +51,7 @@ class BaseDatos {
             'telefono TEXT);');
 
         await db.execute(
-            "INSERT INTO $tablaResponsables (nombre, direccion, telefono) VALUES ('Usuario', '', '');");
+            "INSERT INTO $tablaResponsables (id, nombre, direccion, telefono) VALUES (-1, 'Usuario', '', '');");
       },
       version: 1,
     );
@@ -168,6 +168,16 @@ class BaseDatos {
     return resultadoConsulta.map((e) => e['placa'] as String).toList();
   }
 
+  Future<List<String>> todasLasCategorias() async {
+    var resultadoConsulta2 = await _basedatos.rawQuery('SELECT nombre FROM $tablaCategorias');
+    return resultadoConsulta2.map((e) => e['nombre'] as String).toList();
+  }
+
+  Future<List<String>> todasLosResponsables() async {
+    var resultadoConsulta3 = await _basedatos.rawQuery('SELECT telefono FROM $tablaResponsables');
+    return resultadoConsulta3.map((e) => e['telefono'] as String).toList();
+  }
+
   Future<void> eliminarVehiculo(int vehiculoID) async {
     await _basedatos
         .delete(tablaVehiculos, where: 'id = ?', whereArgs: [vehiculoID]);
@@ -186,7 +196,6 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
 
     return resultado.isNotEmpty ? resultado.first['id']  as int: -1;
   }
-
 
   Future<int> obtenerIDResponsablePredeterminado() async {
     final responsablePredeterminado = 'Usuario';
@@ -229,6 +238,12 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
     await _basedatos.rawUpdate(
         'UPDATE $tablaResponsables SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?',
         [nombre, direccion, telefono, id]);
+  }
+
+  // ignore: non_constant_identifier_names
+  Future<void> editarGasto(Gastos gastos) async {
+    await _basedatos.rawUpdate('UPDATE $tablaGastos SET categoria_id = ?, vehiculo_id = ?, responsable_id = ?, fecha = ?, monto = ? WHERE id = ?',
+    [gastos.categoria, gastos.vehiculoID, gastos.responsable, gastos.fecha, gastos.monto]);
   }
 
   Future<void> agregarGasto(Gastos gastos) async {
@@ -276,10 +291,7 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
   }
 
   Future<List<Gastos>> getGastosFechas(DateTime fechaInicial, DateTime fechaFinal) async {
-  // Establecer la hora de inicio de la fechaInicial a las 00:00:00
   DateTime startOfDayFechaInicial = DateTime(fechaInicial.year, fechaInicial.month, fechaInicial.day, 0, 0, 0);
-
-  // Establecer la hora de fin de la fechaFinal a las 23:59:59
   DateTime endOfDayFechaFinal = DateTime(fechaFinal.year, fechaFinal.month, fechaFinal.day, 23, 59, 59);
 
   final List<Map<String, dynamic>> maps = await _basedatos.query(

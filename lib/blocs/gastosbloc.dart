@@ -148,6 +148,12 @@ class EventoEliminarGasto extends EventoGasto {
   const EventoEliminarGasto(this.gastoID);  
 }
 
+class EventoEditarGasto extends EventoGasto {
+  final Gastos gasto;
+
+  const EventoEditarGasto({required this.gasto});
+}
+
 class EventoEliminarCategoria extends EventoCategoria {
   final int categoriaID;
 
@@ -188,28 +194,6 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
       emit(EstadoCargarGasto(_listaInicialGastos));
     });
 
-    on<EventoAgregarGasto>((event, emit) async {
-        final gastos = await _base.consultaGastos();
-        /* print('Categoria ${event.categoria} Vehiculo ID ${event.vehiculoID} Fecha ${event.fecha} Monto ${event.monto} Responsable ${event.responsable}'); */
-        List<Gastos> lista = gastos.map((e) {
-          return Gastos(
-            id: e['id'],
-            vehiculoID: e['vehiculo_id'], 
-            categoria: e['categoria_id'], 
-            responsable: e['responsable_id'], 
-            fecha: e['fecha'], 
-            monto: e['monto']);
-        }).toList();
-        emit(EstadoCargarGasto(lista));  
-          await _base.agregarGasto(
-            Gastos(
-            vehiculoID: event.vehiculoID, 
-            categoria: event.categoria, 
-            responsable: event.responsable, 
-            fecha: event.fecha, 
-            monto: event.monto));    
-    });
-
     on<EventoAgregarGasto2>((event, emit) async {
      _base.agregarGasto2(event.gasto);
      final gastos = await _base.consultaGastos();
@@ -230,8 +214,21 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoEliminarGasto>((event, emit) async {
       await _base.eliminarGasto(event.gastoID);
-      await _base.consultaGastos();
+      // await _cargarGastos(emit);
+      emit(EstadoCargarGasto(gastos));
     });
+
+    on<EventoEditarGasto>((event, emit) async {
+      await _base.editarGasto(event.gasto);
+      //emit(EstadoCargarGasto(gastos));
+      await _cargarGastos(emit);
+    });
+  }
+
+  Future<void> _cargarGastos(Emitter<EstadoGasto> emit) async {
+    emit(CargarGastos());
+    final gastos = await _base.getGastos();
+    emit(EstadoCargarGasto(gastos));
   }
 }
 
@@ -273,22 +270,22 @@ class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {
     emit(EstadoCargarCategorias(categorias));
   }
 
-  Stream<EstadoCategoria> mapaEventoEstado(EventoCategoria event) async* {
+  /* Stream<EstadoCategoria> mapaEventoEstado(EventoCategoria event) async* {
     if(event is EventoAgregarCategoria) {
       await _base.agregarCategoria(Categorias(
         nombre: event.nombre));
     } 
     yield* _mapaEstado2();
-  }
+  } */
 
-  Stream<EstadoCategoria> _cargarCategoria() async* {
+  /* Stream<EstadoCategoria> _cargarCategoria() async* {
     final categorias = await _base.getCategorias();
     yield EstadoCargarCategorias(categorias);
   }
 
   Stream<EstadoCategoria> _mapaEstado2() async* {
     yield* _cargarCategoria();
-  }
+  } */
 }
 
 class ResponsableBloc extends Bloc<EventoResponsable, EstadoResponsable> {
@@ -332,7 +329,7 @@ Future<void> _cargarResponsables(Emitter<EstadoResponsable> emit) async {
     emit(EstadoCargarResponsables(responsables));
   }
 
-  Stream<EstadoResponsable> mapaEventoEstado(EventoResponsable event) async* {
+  /* Stream<EstadoResponsable> mapaEventoEstado(EventoResponsable event) async* {
     if(event is EventoAgregarResponsable) {
       await _base.agregarCategoria(Categorias(
         nombre: event.nombre));
@@ -347,5 +344,5 @@ Future<void> _cargarResponsables(Emitter<EstadoResponsable> emit) async {
 
   Stream<EstadoResponsable> _mapaEstado3() async* {
     yield* _cargarResponsable();
-  }
+  } */
 }
