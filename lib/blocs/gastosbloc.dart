@@ -209,6 +209,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
             fecha: e['fecha'], 
             monto: e['monto']);
         }).toList();
+        print(lista);
      emit(EstadoCargarGasto(lista)); 
     });
 

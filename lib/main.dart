@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proyecto_vehiculos/modelos/plantilla.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
-import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
+// import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1019,7 +1019,7 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                       return Card(
                         child: ListTile(
                           title: Text(
-                              '${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
+                              '${vehiculo.id}. ${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1576,6 +1576,8 @@ class _ListaGastosState extends State<ListaGastos> {
                     itemCount: gastosToDisplay.length,
                     itemBuilder: (context, index) {
                       final gasto = gastosToDisplay[index];
+                      DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+                      String fechaFormateada = DateFormat('dd/MMMM/yyyy').format(fecha);
                       return Card(
                         child: ListTile(
                           title: Text(
@@ -1584,7 +1586,8 @@ class _ListaGastosState extends State<ListaGastos> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Cantidad: ${gasto.monto.toString()}'),
-                              //Text(gasto.fecha.toString())
+                              Text(fechaFormateada),
+                              Text('ID Vehiculo: ${gasto.vehiculoID.toString()}')
                             ],
                           ),
                           trailing: Row(
@@ -2066,49 +2069,72 @@ class _ListaConsultasState extends State<ListaConsultas> {
   List<Gastos> gastos = [];
 
   Future<void> _seleccionarFechaInicial() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(DateTime.now().year - 1),
-      lastDate: DateTime(DateTime.now().year + 1),
-    ).then((pickedDate) {
-      if (pickedDate != null) {
-        setState(() {
-          fechaInicial = pickedDate;
-        });
-      }
-      return null;
-    });
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: fechaInicial ?? DateTime.now(),
+    firstDate: DateTime(DateTime.now().year - 1),
+    lastDate: DateTime.now(),
+  );
 
-    if (picked != null && picked != fechaInicial) {
-      setState(() {
-        fechaInicial = picked;
-      });
-    }
+  if (picked != null && (fechaFinal == null || picked.isBefore(fechaFinal!))) {
+    setState(() {
+      fechaInicial = picked;
+    });
+  } else {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error en la selección de fecha'),
+          content: const Text('La fecha inicial debe ser anterior a la fecha final.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
   Future<void> _seleccionarFechaFinal() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(DateTime.now().year - 1),
-      lastDate: DateTime(DateTime.now().year + 1),
-    ).then((pickedDate) {
-      if (pickedDate != null) {
-        setState(() {
-          fechaFinal = pickedDate;
-        });
-        _consultarGastos();
-      }
-      return null;
-    });
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: fechaFinal ?? DateTime.now(),
+    firstDate: DateTime(DateTime.now().year - 1),
+    lastDate: DateTime.now(),
+  );
 
-    if (picked != null && picked != fechaFinal) {
-      setState(() {
-        fechaFinal = picked;
-      });
-    }
+  if (picked != null && (fechaInicial == null || picked.isAfter(fechaInicial!))) {
+    setState(() {
+      fechaFinal = picked;
+    });
+    _consultarGastos();
+  } else {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error en la selección de fecha'),
+          content: const Text('La fecha final debe ser posterior a la fecha inicial.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
+
 
   Future<void> _consultarGastos() async {
     gastos = await BaseDatos().getGastosFechas(fechaInicial!, fechaFinal!);
@@ -2116,74 +2142,94 @@ class _ListaConsultasState extends State<ListaConsultas> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    double totalGastos = 0.0;
-    for (var gasto in gastos) {
-      totalGastos += gasto.monto;
-    }
-    return Scaffold(
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Column(
-                children: [
-                  const Divider(),
-                  const Text('Desde: '),
-                  ElevatedButton(
-                    onPressed: () {
-                      _seleccionarFechaInicial();
-                    },
-                    child: Text(fechaInicial != null
-                        ? DateFormat('dd-MM-yyyy').format(fechaInicial!)
-                        : 'Seleccionar Fecha Inicial'),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  const Divider(),
-                  const Text('Hasta: '),
-                  ElevatedButton(
-                    onPressed: () {
-                      _seleccionarFechaFinal();
-                    },
-                    child: Text(fechaFinal != null
-                        ? DateFormat('dd-MM-yyyy').format(fechaFinal!)
-                        : 'Seleccionar Fecha Final'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          /* Text('Fecha de inicio: $fechaInicial'),
-        Text('Fecha de fin: $fechaFinal'), */
-          Expanded(
-            child: ListView.builder(
-              itemCount: gastos.length,
-              itemBuilder: (context, index) {
-                final gasto = gastos[index];
-                return Card(
-                  child: ListTile(
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Monto: ${gasto.monto}'),
-                      ],
-                    ),
-                  ),
-                );
-              },
+Widget build(BuildContext context) {
+  double totalGastos = 0.0;
+  for (var gasto in gastos) {
+    totalGastos += gasto.monto;
+  }
+
+  return Scaffold(
+    body: Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Column(
+              children: [
+                const Divider(),
+                const Text('Desde: '),
+                ElevatedButton(
+                  onPressed: () {
+                    _seleccionarFechaInicial();
+                  },
+                  child: Text(fechaInicial != null
+                      ? DateFormat('dd-MM-yyyy').format(fechaInicial!)
+                      : 'Seleccionar Fecha Inicial'),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                const Divider(),
+                const Text('Hasta: '),
+                ElevatedButton(
+                  onPressed: () {
+                    _seleccionarFechaFinal();
+                  },
+                  child: Text(fechaFinal != null
+                      ? DateFormat('dd-MM-yyyy').format(fechaFinal!)
+                      : 'Seleccionar Fecha Final'),
+                ),
+              ],
+            ),
+          ],
+        ),
+        Card(
+          elevation: 14.0,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                Text(
+                  'Total: \$${totalGastos.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
-          Card(
-              elevation: 14.00,
-              child: Text('Total: \$${totalGastos.toStringAsFixed(2)}')),
-        ],
-      ),
-    );
-  }
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: gastos.length,
+            itemBuilder: (context, index) {
+              final gasto = gastos[index];
+              DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+              String fechaFormateada = DateFormat('dd/MMMM/yyyy').format(fecha);
+              return Card(
+                child: ListTile(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Monto: \$${gasto.monto}'),
+                    ],
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ID Vehiculo: ${gasto.vehiculoID}'),
+                      Text('Fecha: $fechaFormateada'),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 }
 
 final RegExp noEmojiRegExp = RegExp(

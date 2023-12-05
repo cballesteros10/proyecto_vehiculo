@@ -82,6 +82,7 @@ class BaseDatos {
     if (maps.isNotEmpty) {
       return List.generate(maps.length, (i) {
         return Gastos(
+            id: maps[i]['id'],
             vehiculoID: maps[i]['vehiculo_id'],
             categoria: maps[i]['categoria_id'],
             responsable: maps[i]['responsable_id'],
