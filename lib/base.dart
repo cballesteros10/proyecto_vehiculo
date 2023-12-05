@@ -191,7 +191,7 @@ class BaseDatos {
   }
 
 Future<int> obtenerIDCategoriaPredeterminada() async {
-    final categoriaPredeterminada = 'General';
+    const categoriaPredeterminada = 'General';
     final resultado = await _basedatos.query(tablaCategorias,
         where: 'nombre = ?', whereArgs: [categoriaPredeterminada]);
 
@@ -199,7 +199,7 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
   }
 
   Future<int> obtenerIDResponsablePredeterminado() async {
-    final responsablePredeterminado = 'Usuario';
+    const responsablePredeterminado = 'Usuario';
     final resultado = await _basedatos.query(tablaResponsables,
         where: 'nombre = ?', whereArgs: [responsablePredeterminado]);
 

@@ -41,14 +41,14 @@ class AplicacionInyectada extends StatelessWidget {
           create: (context) => BlocVehiculo()..add(Inicializo()),
         ),
         BlocProvider(
+          create: (context) => GastoBloc()..add(Inicializo2()),
+        ),
+        BlocProvider(
           create: (context) => CategoriaBloc()..add(Inicializo3()),
         ),
         BlocProvider(
           create: (context) => ResponsableBloc()..add(Inicializo4()),
         ),
-        BlocProvider(
-          create: (context) => GastoBloc()..add(Inicializo2()),
-        )
       ],
       child: const MainApp(),
     );
@@ -648,27 +648,27 @@ void mostrarAgregarCategoria(BuildContext context) {
                       }
 
                       bool categoriaNoRegistrada =
-        await validarCategoriaNoRegistrada(nombreCategoria);
-    if (!categoriaNoRegistrada) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Categoría ya registrada'),
-            content: const Text('Ingrese otra categoría.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-      return;
-    }
+                          await validarCategoriaNoRegistrada(nombreCategoria);
+                      if (!categoriaNoRegistrada) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Categoría ya registrada'),
+                              content: const Text('Ingrese otra categoría.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
 
                       context
                           .read<CategoriaBloc>()
@@ -1484,7 +1484,7 @@ class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
-    final newText = newValue.text?.toUpperCase() ?? '';
+    final newText = newValue.text.toUpperCase();
     return TextEditingValue(
       text: newText,
       selection: newValue.selection,
@@ -1576,8 +1576,10 @@ class _ListaGastosState extends State<ListaGastos> {
                     itemCount: gastosToDisplay.length,
                     itemBuilder: (context, index) {
                       final gasto = gastosToDisplay[index];
-                      DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
-                      String fechaFormateada = DateFormat('dd/MMMM/yyyy').format(fecha);
+                      DateTime fecha =
+                          DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+                      String fechaFormateada =
+                          DateFormat('dd/MMMM/yyyy').format(fecha);
                       return Card(
                         child: ListTile(
                           title: Text(
@@ -1587,7 +1589,8 @@ class _ListaGastosState extends State<ListaGastos> {
                             children: [
                               Text('Cantidad: ${gasto.monto.toString()}'),
                               Text(fechaFormateada),
-                              Text('ID Vehiculo: ${gasto.vehiculoID.toString()}')
+                              Text(
+                                  'ID Vehiculo: ${gasto.vehiculoID.toString()}')
                             ],
                           ),
                           trailing: Row(
@@ -2069,72 +2072,75 @@ class _ListaConsultasState extends State<ListaConsultas> {
   List<Gastos> gastos = [];
 
   Future<void> _seleccionarFechaInicial() async {
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: fechaInicial ?? DateTime.now(),
-    firstDate: DateTime(DateTime.now().year - 1),
-    lastDate: DateTime.now(),
-  );
-
-  if (picked != null && (fechaFinal == null || picked.isBefore(fechaFinal!))) {
-    setState(() {
-      fechaInicial = picked;
-    });
-  } else {
-    showDialog(
+    final DateTime? picked = await showDatePicker(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error en la selección de fecha'),
-          content: const Text('La fecha inicial debe ser anterior a la fecha final.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aceptar'),
-            ),
-          ],
-        );
-      },
+      initialDate: fechaInicial ?? DateTime.now(),
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime.now(),
     );
+
+    if (picked != null &&
+        (fechaFinal == null || picked.isBefore(fechaFinal!))) {
+      setState(() {
+        fechaInicial = picked;
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error en la selección de fecha'),
+            content: const Text(
+                'La fecha inicial debe ser anterior a la fecha final.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Aceptar'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
-}
 
   Future<void> _seleccionarFechaFinal() async {
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: fechaFinal ?? DateTime.now(),
-    firstDate: DateTime(DateTime.now().year - 1),
-    lastDate: DateTime.now(),
-  );
-
-  if (picked != null && (fechaInicial == null || picked.isAfter(fechaInicial!))) {
-    setState(() {
-      fechaFinal = picked;
-    });
-    _consultarGastos();
-  } else {
-    showDialog(
+    final DateTime? picked = await showDatePicker(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error en la selección de fecha'),
-          content: const Text('La fecha final debe ser posterior a la fecha inicial.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Aceptar'),
-            ),
-          ],
-        );
-      },
+      initialDate: fechaFinal ?? DateTime.now(),
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime.now(),
     );
-  }
-}
 
+    if (picked != null &&
+        (fechaInicial == null || picked.isAfter(fechaInicial!))) {
+      setState(() {
+        fechaFinal = picked;
+      });
+      _consultarGastos();
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error en la selección de fecha'),
+            content: const Text(
+                'La fecha final debe ser posterior a la fecha inicial.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Aceptar'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
 
   Future<void> _consultarGastos() async {
     gastos = await BaseDatos().getGastosFechas(fechaInicial!, fechaFinal!);
@@ -2142,94 +2148,96 @@ class _ListaConsultasState extends State<ListaConsultas> {
   }
 
   @override
-Widget build(BuildContext context) {
-  double totalGastos = 0.0;
-  for (var gasto in gastos) {
-    totalGastos += gasto.monto;
+  Widget build(BuildContext context) {
+    double totalGastos = 0.0;
+    for (var gasto in gastos) {
+      totalGastos += gasto.monto;
+    }
+
+    return Scaffold(
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  const Divider(),
+                  const Text('Desde: '),
+                  ElevatedButton(
+                    onPressed: () {
+                      _seleccionarFechaInicial();
+                    },
+                    child: Text(fechaInicial != null
+                        ? DateFormat('dd-MM-yyyy').format(fechaInicial!)
+                        : 'Seleccionar Fecha Inicial'),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  const Divider(),
+                  const Text('Hasta: '),
+                  ElevatedButton(
+                    onPressed: () {
+                      _seleccionarFechaFinal();
+                    },
+                    child: Text(fechaFinal != null
+                        ? DateFormat('dd-MM-yyyy').format(fechaFinal!)
+                        : 'Seleccionar Fecha Final'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Card(
+            elevation: 14.0,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: [
+                  Text(
+                    'Total: \$${totalGastos.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                        fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: gastos.length,
+              itemBuilder: (context, index) {
+                final gasto = gastos[index];
+                DateTime fecha =
+                    DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+                String fechaFormateada =
+                    DateFormat('dd/MMMM/yyyy').format(fecha);
+                return Card(
+                  child: ListTile(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Monto: \$${gasto.monto}'),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('ID Vehiculo: ${gasto.vehiculoID}'),
+                        Text('Fecha: $fechaFormateada'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
-
-  return Scaffold(
-    body: Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
-              children: [
-                const Divider(),
-                const Text('Desde: '),
-                ElevatedButton(
-                  onPressed: () {
-                    _seleccionarFechaInicial();
-                  },
-                  child: Text(fechaInicial != null
-                      ? DateFormat('dd-MM-yyyy').format(fechaInicial!)
-                      : 'Seleccionar Fecha Inicial'),
-                ),
-              ],
-            ),
-            Column(
-              children: [
-                const Divider(),
-                const Text('Hasta: '),
-                ElevatedButton(
-                  onPressed: () {
-                    _seleccionarFechaFinal();
-                  },
-                  child: Text(fechaFinal != null
-                      ? DateFormat('dd-MM-yyyy').format(fechaFinal!)
-                      : 'Seleccionar Fecha Final'),
-                ),
-              ],
-            ),
-          ],
-        ),
-        Card(
-          elevation: 14.0,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                Text(
-                  'Total: \$${totalGastos.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: gastos.length,
-            itemBuilder: (context, index) {
-              final gasto = gastos[index];
-              DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
-              String fechaFormateada = DateFormat('dd/MMMM/yyyy').format(fecha);
-              return Card(
-                child: ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Monto: \$${gasto.monto}'),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('ID Vehiculo: ${gasto.vehiculoID}'),
-                      Text('Fecha: $fechaFormateada'),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 }
 
 final RegExp noEmojiRegExp = RegExp(
