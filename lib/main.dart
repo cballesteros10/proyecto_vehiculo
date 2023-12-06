@@ -2,14 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:proyecto_vehiculos/blocs/gastosbloc.dart';
-import 'package:proyecto_vehiculos/base.dart';
-import 'package:proyecto_vehiculos/blocs/vehiculobloc.dart';
+import 'package:MyCarApp/blocs/gastosbloc.dart';
+import 'package:MyCarApp/base.dart';
+import 'package:MyCarApp/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:proyecto_vehiculos/modelos/plantilla.dart';
+import 'package:MyCarApp/modelos/plantilla.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
-// import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1009,6 +1008,8 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
 
   @override
   Widget build(BuildContext context) {
+    var estadoVehiculos = context.watch<BlocVehiculo>().state;
+    vehiculos = (estadoVehiculos as EstadoCargarVehiculos).vehiculos;
     var estado = context.watch<GastoBloc>().state;
      gastos = (estado as EstadoCargarGasto).gastos;
      var estadoCategoria = context.watch<CategoriaBloc>().state;
@@ -1534,6 +1535,12 @@ class _ListaGastosState extends State<ListaGastos> {
   Widget build(BuildContext context) {
     var estado = context.watch<BlocVehiculo>().state;
     vehiculos = (estado as EstadoCargarVehiculos).vehiculos;
+    var estadoGas = context.watch<GastoBloc>().state;
+     gastos = (estadoGas as EstadoCargarGasto).gastos;
+     var estadoCategoria = context.watch<CategoriaBloc>().state;
+     categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
+     var estadoResponsables = context.watch<ResponsableBloc>().state;
+     responsablessss = (estadoResponsables as EstadoCargarResponsables).responsables;
     return Scaffold(
       body: Column(
         children: [
@@ -1871,7 +1878,6 @@ void editarGastos(BuildContext context, Gastos gasto) {
                       controladorMontoE.text.replaceAll(',', ''));
                   final int fechaString =
                       fechaSeleccionada.millisecondsSinceEpoch;
-
                   if (categoriaGasto != null &&
                       vehiculoGasto != null &&
                       monto != null) {

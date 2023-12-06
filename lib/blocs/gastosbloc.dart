@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
-import 'package:proyecto_vehiculos/base.dart';
-import 'package:proyecto_vehiculos/main.dart';
-import 'package:proyecto_vehiculos/modelos/plantilla.dart';
+import 'package:MyCarApp/base.dart';
+import 'package:MyCarApp/main.dart';
+import 'package:MyCarApp/modelos/plantilla.dart';
 import 'package:equatable/equatable.dart';
 // import 'package:sqflite/sqflite.dart';
 
@@ -192,7 +192,20 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
     _base = BaseDatos();
 
     on<Inicializo2>((event, emit) async {
-      _listaInicialGastos = await _base.getGastos();
+      
+     final gastos = await _base.consultaGastos();
+       _listaInicialGastos = gastos.map((e) {
+          return Gastos(
+            id: e['id'],
+            vehiculo_nombre: e['placas'],
+            categoria_nombre: e['categorias'],
+            responsable_nombre: e['responsables'],
+            vehiculoID: e['vehiculo_id'], 
+            categoria: e['categoria_id'], 
+            responsable: e['responsable_id'], 
+            fecha: e['fecha'], 
+            monto: e['monto']);
+        }).toList();
       emit(EstadoCargarGasto(_listaInicialGastos));
     });
 
@@ -222,6 +235,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoEditarGasto>((event, emit) async {
       await _base.editarGasto(event.gasto);
+      gastos = await _base.editarGasto(event.gasto);
       emit(EstadoCargarGasto(gastos));
       // await _cargarGastos(emit);
     });

@@ -1,8 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:proyecto_vehiculos/base.dart';
-import 'package:proyecto_vehiculos/modelos/plantilla.dart';
+import 'package:MyCarApp/base.dart';
+import 'package:MyCarApp/modelos/plantilla.dart';
 
 sealed class EstadoVehiculo with EquatableMixin {
   final List<Vehiculo> vehiculos;

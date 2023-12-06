@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:proyecto_vehiculos/modelos/plantilla.dart';
+import 'package:MyCarApp/modelos/plantilla.dart';
 // import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 late Database _basedatos;
@@ -242,9 +242,23 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
   }
 
   // ignore: non_constant_identifier_names
-  Future<void> editarGasto(Gastos gastos) async {
+  Future<List<Gastos>> editarGasto(Gastos gastos) async {
     await _basedatos.rawUpdate('UPDATE $tablaGastos SET categoria_id = ?, vehiculo_id = ?, responsable_id = ?, fecha = ?, monto = ? WHERE id = ?',
     [gastos.categoria, gastos.vehiculoID, gastos.responsable, gastos.fecha, gastos.monto]);
+    List<Map<String, dynamic>> gastosActualizados = await _basedatos.query(tablaGastos);
+    List<Gastos> lista = gastosActualizados.map((e) {
+          return Gastos(
+            id: e['id'],
+            vehiculo_nombre: e['placas'],
+            categoria_nombre: e['categorias'],
+            responsable_nombre: e['responsables'],
+            vehiculoID: e['vehiculo_id'], 
+            categoria: e['categoria_id'], 
+            responsable: e['responsable_id'], 
+            fecha: e['fecha'], 
+            monto: e['monto']);
+        }).toList();
+        return lista;
   }
 
   Future<void> agregarGasto(Gastos gastos) async {
