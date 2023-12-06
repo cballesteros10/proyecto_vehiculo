@@ -40,14 +40,14 @@ class InicioResponsables extends EstadoResponsable {
   List<Object?> get props => [];
 }
 
-class CargandoCategoria extends EstadoCategoria {
+class CargandoCategoria extends EstadoCargarCategorias {
   const CargandoCategoria(super.categorias);
 
   @override
   List<Object?> get props => [];
 }
 
-class CargandoResponsable extends EstadoResponsable {
+class CargandoResponsable extends EstadoCargarResponsables {
   const CargandoResponsable(super.responsables);
 
   @override
@@ -77,7 +77,9 @@ class EstadoCargarResponsables extends EstadoResponsable {
   List<Object?> get props => [responsables];
 }
 
-class CargarGastos extends EstadoGasto {
+class CargarGastos extends EstadoCargarGasto {
+  const CargarGastos(super.gastos);
+
   @override
   List<Object?> get props => [];
 }
@@ -186,7 +188,7 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
   late BaseDatos _base;
   List<Gastos> _listaInicialGastos = [];
 
-  GastoBloc() : super(CargarGastos()) {
+  GastoBloc() : super(const CargarGastos([])) {
     _base = BaseDatos();
 
     on<Inicializo2>((event, emit) async {
@@ -220,16 +222,16 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoEditarGasto>((event, emit) async {
       await _base.editarGasto(event.gasto);
-      //emit(EstadoCargarGasto(gastos));
-      await _cargarGastos(emit);
+      emit(EstadoCargarGasto(gastos));
+      // await _cargarGastos(emit);
     });
   }
 
-  Future<void> _cargarGastos(Emitter<EstadoGasto> emit) async {
-    emit(CargarGastos());
+  /* Future<void> _cargarGastos(Emitter<EstadoGasto> emit) async {
+    emit(CargarGastos([]));
     final gastos = await _base.getGastos();
     emit(EstadoCargarGasto(gastos));
-  }
+  } */
 }
 
 class CategoriaBloc extends Bloc<EventoCategoria, EstadoCategoria> {

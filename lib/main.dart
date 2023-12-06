@@ -18,7 +18,7 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   await BaseDatos().initDatabase();
-  runApp(const AplicacionInyectada());
+  runApp(const MiApp());
 }
 
 List<Categorias> categorias = [];
@@ -52,6 +52,52 @@ class AplicacionInyectada extends StatelessWidget {
       ],
       child: const MainApp(),
     );
+  }
+}
+
+class MiApp extends StatefulWidget {
+  const MiApp({super.key});
+
+  @override
+  State<MiApp> createState() => _MiAppState();
+}
+
+class _MiAppState extends State<MiApp> {
+  final _vehiculoBloc = BlocVehiculo();
+  final _gastoBloc = GastoBloc();
+  final _categoriaBloc = CategoriaBloc();
+  final _responsableBloc = ResponsableBloc();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _vehiculoBloc.add(Inicializo());
+    _gastoBloc.add(Inicializo2());
+    _categoriaBloc.add(Inicializo3());
+    _responsableBloc.add(Inicializo4());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _vehiculoBloc),
+        BlocProvider.value(value: _gastoBloc),
+        BlocProvider.value(value: _categoriaBloc),
+        BlocProvider.value(value: _responsableBloc),
+      ],
+      child: const MainApp(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _vehiculoBloc.close();
+    _gastoBloc.close();
+    _categoriaBloc.close();
+    _responsableBloc.close();
+    super.dispose();
   }
 }
 
@@ -859,7 +905,7 @@ class Ayuda extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'MyMobileAgenda es una app capaz de llevar registro de tus autos y los gastos que hagas en ellos.',
+                      'MyCarApp es una app capaz de llevar registro de tus autos y los gastos que hagas en ellos.',
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -963,6 +1009,12 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
 
   @override
   Widget build(BuildContext context) {
+    var estado = context.watch<GastoBloc>().state;
+     gastos = (estado as EstadoCargarGasto).gastos;
+     var estadoCategoria = context.watch<CategoriaBloc>().state;
+     categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
+     var estadoResponsables = context.watch<ResponsableBloc>().state;
+     responsablessss = (estadoResponsables as EstadoCargarResponsables).responsables;
     return Scaffold(
       body: Column(
         children: [
@@ -1016,6 +1068,9 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
                     itemCount: vehiculosToDisplay.length,
                     itemBuilder: (context, index) {
                       final vehiculo = vehiculosToDisplay[index];
+                      context.read<GastoBloc>().add(Inicializo2());
+                      context.read<CategoriaBloc>().add(Inicializo3());
+                      context.read<ResponsableBloc>().add(Inicializo4());
                       return Card(
                         child: ListTile(
                           title: Text(
@@ -1110,11 +1165,6 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
       return value;
     }
     return value[0].toUpperCase() + value.substring(1);
-  }
-
-  Future<bool> validarPlacaNoRegistrada(String placa) async {
-    final placaRegistrada = await BaseDatos().todosLosNombres();
-    return !placaRegistrada.contains(placa.toUpperCase());
   }
 
   showDialog(
@@ -1212,30 +1262,6 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                       !validarCampo(context, controladorFechaE.text)) {
                     return;
                   }
-
-                  bool placaNoRegistrada =
-                      await validarPlacaNoRegistrada(controladorPlacaE.text);
-                  if (!placaNoRegistrada) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Placa ya registrada'),
-                          content: const Text('Ingrese otra placa.'),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('OK'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                    return;
-                  }
-
                   context.read<BlocVehiculo>().add(EventoEditarVehiculo(
                       controladorPlacaE.text,
                       controladorModeloE.text,
@@ -1506,6 +1532,8 @@ class _ListaGastosState extends State<ListaGastos> {
 
   @override
   Widget build(BuildContext context) {
+    var estado = context.watch<BlocVehiculo>().state;
+    vehiculos = (estado as EstadoCargarVehiculos).vehiculos;
     return Scaffold(
       body: Column(
         children: [
@@ -1580,10 +1608,13 @@ class _ListaGastosState extends State<ListaGastos> {
                           DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
                       String fechaFormateada =
                           DateFormat('dd/MMMM/yyyy').format(fecha);
+                      String categoriaNombre =
+                          gasto.categoria_nombre ?? 'General';
+                      String vehiculoNombre =
+                          gasto.vehiculo_nombre ?? 'Vehiculo';
                       return Card(
                         child: ListTile(
-                          title: Text(
-                              '${gasto.categoria_nombre!} - ${gasto.vehiculo_nombre!}'),
+                          title: Text('$categoriaNombre - $vehiculoNombre'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1673,9 +1704,13 @@ void editarGastos(BuildContext context, Gastos gasto) {
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
 
-  categoriaControllerE.text = gasto.categoria_nombre!;
-  vehiculoControllerE.text = gasto.vehiculo_nombre!;
-  responsableControllerE.text = gasto.responsable_nombre!;
+   String categoriaNombre = gasto.categoria_nombre ?? 'General';
+   String vehiculoNombre = gasto.vehiculo_nombre ?? 'Vehiculo';
+   String responsableNombre = gasto.responsable_nombre ?? 'Usuario';
+
+  categoriaControllerE.text = categoriaNombre;
+  vehiculoControllerE.text = vehiculoNombre;
+  responsableControllerE.text = responsableNombre;
   controladorMontoE.text = gasto.monto.toString();
   // DateTime fechaSeleccionada = DateTime.parse(gasto.fecha.toString());
 

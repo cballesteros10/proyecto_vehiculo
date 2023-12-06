@@ -10,7 +10,7 @@ sealed class EstadoVehiculo with EquatableMixin {
   EstadoVehiculo(this.vehiculos);
 }
 
-class Cargando extends EstadoVehiculo {
+class Cargando extends EstadoCargarVehiculos {
   Cargando(super.vehiculos);
 
   @override
