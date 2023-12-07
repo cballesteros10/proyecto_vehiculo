@@ -235,8 +235,20 @@ class GastoBloc extends Bloc<EventoGasto, EstadoGasto> {
 
     on<EventoEditarGasto>((event, emit) async {
       await _base.editarGasto(event.gasto);
-      gastos = await _base.editarGasto(event.gasto);
-      emit(EstadoCargarGasto(gastos));
+       final gastos = await _base.consultaGastos();
+     List<Gastos> lista = gastos.map((e) {
+          return Gastos(
+            id: e['id'],
+            vehiculo_nombre: e['placas'],
+            categoria_nombre: e['categorias'],
+            responsable_nombre: e['responsables'],
+            vehiculoID: e['vehiculo_id'], 
+            categoria: e['categoria_id'], 
+            responsable: e['responsable_id'], 
+            fecha: e['fecha'], 
+            monto: e['monto']);
+        }).toList();
+      emit(EstadoCargarGasto(lista));
       // await _cargarGastos(emit);
     });
   }

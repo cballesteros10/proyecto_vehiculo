@@ -102,7 +102,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
 
   Stream<EstadoVehiculo> mapaEventoEstado(EventoVehiculo event) async* {
     if(event is EventoAgregarVehiculo) {
-      await _base.agregarVehiculo2(Vehiculo( 
+      await _base.agregarVehiculo(Vehiculo( 
       placa: event.placa, 
       modelo: event.modelo, 
       marca: event.marca, 

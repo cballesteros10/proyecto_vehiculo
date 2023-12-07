@@ -10,7 +10,8 @@ class Vehiculo {
   late String tipo;
   late int fecha;
 
-  Vehiculo({ this.id,
+  Vehiculo({
+    this.id,
     required this.placa,
     required this.modelo,
     required this.marca,
@@ -29,38 +30,40 @@ class Vehiculo {
     /* final List<Map<String, dynamic>> gastosMapList = map['gastos'] ?? [];
 
     gastos = gastosMapList.map((g) => Gastos.fromMap(g)).toList(); */
+    @override
+    String toString() =>
+        'Vehiculos(id: $id, placa: $placa, modelo: $modelo, marca: $marca, tipo: $tipo, fecha: $fecha)';
   }
 
   @override
   bool operator ==(covariant Vehiculo other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.placa == placa &&
-      other.modelo == modelo &&
-      other.marca == marca &&
-      other.tipo == tipo &&
-      other.fecha == fecha;
+
+    return other.placa == placa &&
+        other.modelo == modelo &&
+        other.marca == marca &&
+        other.tipo == tipo &&
+        other.fecha == fecha;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      placa.hashCode ^
-      modelo.hashCode ^
-      marca.hashCode ^
-      tipo.hashCode ^
-      fecha.hashCode;
+        placa.hashCode ^
+        modelo.hashCode ^
+        marca.hashCode ^
+        tipo.hashCode ^
+        fecha.hashCode;
   }
 
   Map<String, dynamic> miMapaVehiculos() {
     return {
-      'id' : id,
-      'placa' : placa,
-      'modelo' : modelo,
-      'marca' : marca,
-      'tipo' : tipo,
-      'fecha' : fecha,
+      'id': id,
+      'placa': placa,
+      'modelo': modelo,
+      'marca': marca,
+      'tipo': tipo,
+      'fecha': fecha,
     };
   }
 }
@@ -75,12 +78,12 @@ class Gastos {
   String? responsable_nombre;
   late int fecha;
   late double monto;
-  
+
   Gastos({
     this.id,
     this.categoria_nombre,
     this.vehiculo_nombre,
-    this.responsable_nombre,  
+    this.responsable_nombre,
     required this.vehiculoID,
     required this.categoria,
     required this.responsable,
@@ -99,41 +102,45 @@ class Gastos {
 
   Map<String, dynamic> miMapaGastos() {
     return {
-      'id' : id,
-      'vehiculo_id' : vehiculoID,
-      'categoria_id' : categoria,
-      'responsable_id' : responsable,
-      'fecha' : fecha,
-      'monto' : monto
+      'id': id,
+      'vehiculo_id': vehiculoID,
+      'categoria_id': categoria,
+      'responsable_id': responsable,
+      'fecha': fecha,
+      'monto': monto
     };
   }
+
+  @override
+  String toString() =>
+      'Gastos(id: $id, vehiculo_id : $vehiculoID, categoria_id : $categoria, responsable_id: $responsable, fecha: $fecha, monto: $monto )';
 }
 
 class Categorias {
   late int? id;
   late String nombre;
 
-  Categorias({ this.id,
+  Categorias({
+    this.id,
     required this.nombre,
   });
 
   Map<String, dynamic> miMapaCategorias() {
-    return {
-      'id' : id,
-      'nombre' : nombre
-    };
+    return {'id': id, 'nombre': nombre};
   }
 
   @override
   bool operator ==(covariant Categorias other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.nombre == nombre;
+
+    return other.nombre == nombre;
   }
 
   @override
   int get hashCode => nombre.hashCode;
+
+  @override
+  String toString() => 'Categorias(id: $id, nombre: $nombre)';
 }
 
 class Responsables {
@@ -141,7 +148,7 @@ class Responsables {
   late String nombre;
   late String direccion;
   late String telefono;
-  
+
   Responsables({
     this.id,
     required this.nombre,
@@ -151,28 +158,24 @@ class Responsables {
 
   Map<String, dynamic> miMapaResponsables() {
     return {
-      'id' : id,
-      'nombre' : nombre,
-      'direccion' : direccion,
-      'telefono' : telefono
+      'id': id,
+      'nombre': nombre,
+      'direccion': direccion,
+      'telefono': telefono
     };
   }
 
   @override
   bool operator ==(covariant Responsables other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.nombre == nombre &&
-      other.direccion == direccion &&
-      other.telefono == telefono;
+
+    return other.nombre == nombre &&
+        other.direccion == direccion &&
+        other.telefono == telefono;
   }
 
   @override
   int get hashCode {
-    return 
-      nombre.hashCode ^
-      direccion.hashCode ^
-      telefono.hashCode;
+    return nombre.hashCode ^ direccion.hashCode ^ telefono.hashCode;
   }
 }

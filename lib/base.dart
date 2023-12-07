@@ -8,7 +8,7 @@ late Database _basedatos;
 
 class BaseDatos {
   // ignore: constant_identifier_names
-  static const String nombre_db = 'base.db';
+  static const String nombre_db = 'base4.db';
   static const String tablaVehiculos = 'vehiculos';
   static const String tablaGastos = 'gastos';
   static const String tablaCategorias = 'categorias';
@@ -130,22 +130,6 @@ class BaseDatos {
     await _basedatos.insert(tablaVehiculos, vehiculo.miMapaVehiculos());
   }
 
-  Future<void> agregarVehiculo2(Vehiculo vehiculo) async {
-    await _basedatos.rawInsert(
-        'INSERT INTO $tablaVehiculos (placa, modelo, marca, tipo, fecha) VALUES (?, ?, ?, ?, ?)',
-        [
-          vehiculo.placa,
-          vehiculo.modelo,
-          vehiculo.marca,
-          vehiculo.tipo,
-          vehiculo.fecha
-        ]);
-  }
-
-  Future<void> agregarCategoria(Categorias categorias) async {
-    await _basedatos.insert(tablaCategorias, categorias.miMapaCategorias());
-  }
-
   Future<void> agregarCategoria2(Categorias categorias) async {
     await _basedatos.rawInsert(
         'INSERT INTO $tablaCategorias (nombre) VALUES (?)',
@@ -156,11 +140,6 @@ class BaseDatos {
     await _basedatos.rawInsert(
         'INSERT INTO $tablaResponsables (nombre, direccion, telefono) VALUES (?, ?, ?)',
         [responsables.nombre, responsables.direccion, responsables.telefono]);
-  }
-
-  Future<void> agregarResponsable2(Responsables responsables) async {
-    await _basedatos.insert(
-        tablaResponsables, responsables.miMapaResponsables());
   }
 
   Future<List<String>> todosLosNombres() async {
@@ -211,7 +190,6 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
 
     if (categoriaID != idCategoriaPredeterminada) {
       await _basedatos.delete(tablaCategorias, where: 'id = ?', whereArgs: [categoriaID]);
-      // También puedes realizar otras acciones relacionadas con la eliminación aquí
     }
   }
 
@@ -220,7 +198,6 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
 
     if (responsableID != idResponsablePredeterminado) {
       await _basedatos.delete(tablaResponsables, where: 'id = ?', whereArgs: [responsableID]);
-      // También puedes realizar otras acciones relacionadas con la eliminación aquí
     }
   }
 
@@ -243,8 +220,18 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
 
   // ignore: non_constant_identifier_names
   Future<List<Gastos>> editarGasto(Gastos gastos) async {
-    await _basedatos.rawUpdate('UPDATE $tablaGastos SET categoria_id = ?, vehiculo_id = ?, responsable_id = ?, fecha = ?, monto = ? WHERE id = ?',
-    [gastos.categoria, gastos.vehiculoID, gastos.responsable, gastos.fecha, gastos.monto]);
+    await _basedatos.update(tablaGastos, 
+    {
+      'categoria_id': gastos.categoria,
+      'vehiculo_id': gastos.vehiculoID, 
+      'responsable_id': gastos.responsable, 
+      'fecha': gastos.fecha, 
+      'monto': gastos.monto
+    },
+    where: 'id = ?', whereArgs: [gastos.id],
+    conflictAlgorithm: ConflictAlgorithm.replace);
+   /*  await _basedatos.rawUpdate('UPDATE $tablaGastos SET categoria_id = ?, vehiculo_id = ?, responsable_id = ?, fecha = ?, monto = ? WHERE id = ?',
+    [gastos.categoria, gastos.vehiculoID, gastos.responsable, gastos.fecha, gastos.monto]); */
     List<Map<String, dynamic>> gastosActualizados = await _basedatos.query(tablaGastos);
     List<Gastos> lista = gastosActualizados.map((e) {
           return Gastos(
@@ -258,11 +245,8 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
             fecha: e['fecha'], 
             monto: e['monto']);
         }).toList();
-        return lista;
-  }
 
-  Future<void> agregarGasto(Gastos gastos) async {
-    await _basedatos.insert(tablaGastos, gastos.miMapaGastos());
+        return lista;
   }
 
   Future<void> agregarGasto2(Gastos gastos) async {
@@ -275,23 +259,6 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
           gastos.fecha,
           gastos.monto
         ]);
-  }
-
-  Future<List<Gastos>> getGastosPorVehiculos(int vehiculoID) async {
-    final List<Map<String, dynamic>> maps = await _basedatos.query(
-      tablaGastos,
-      where: 'vehiculo_id = ?',
-      whereArgs: [vehiculoID],
-    );
-
-    return List.generate(maps.length, (i) {
-      return Gastos(
-          vehiculoID: vehiculoID,
-          categoria: maps[i]['categoria_id'],
-          responsable: maps[i]['responsable_id'],
-          fecha: maps[i]['fecha'],
-          monto: maps[i]['monto']);
-    });
   }
 
   Future<List<Map<String, dynamic>>> consultaGastos() async {

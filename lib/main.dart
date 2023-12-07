@@ -20,6 +20,8 @@ void main() async {
   runApp(const MiApp());
 }
 
+var formatter = NumberFormat('#,###.##');
+
 List<Categorias> categorias = [];
 
 List<Vehiculo> vehiculos = [];
@@ -586,29 +588,31 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                       final nombreResponsable = controladorNombreE.text;
                       final direccionResponsable = controladorDireccionE.text;
                       final telefonoResponsable = controladorTelefonoE.text;
-
-                      bool responsableNoRegistrado =
-                          await validarResponsableNoRegistrado(
-                              telefonoResponsable);
-                      if (!responsableNoRegistrado) {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Responsable ya registrado'),
-                              content: const Text('Ingrese otro responsable.'),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        return;
+                      if (telefonoResponsable != responsables.telefono) {
+                        bool responsableNoRegistrado =
+                            await validarResponsableNoRegistrado(
+                                telefonoResponsable);
+                        if (!responsableNoRegistrado) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Responsable ya registrado'),
+                                content:
+                                    const Text('Ingrese otro responsable.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('OK'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          return;
+                        }
                       }
 
                       if (nombreResponsable.isNotEmpty &&
@@ -645,7 +649,9 @@ void mostrarAgregarCategoria(BuildContext context) {
   }
 
   Future<bool> validarCategoriaNoRegistrada(String nombre) async {
-    final categoriaRegistrada = await BaseDatos().todasLasCategorias();
+    var categoriaRegistrada = await BaseDatos().todasLasCategorias();
+    categoriaRegistrada =
+        categoriaRegistrada.map((e) => e.toUpperCase()).toList();
     return !categoriaRegistrada.contains(nombre.toUpperCase());
   }
 
@@ -904,19 +910,23 @@ class Ayuda extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'MyCarApp es una app capaz de llevar registro de tus autos y los gastos que hagas en ellos.',
+                      'MyCarApp es una app capaz de llevar registro de tus autos (o cualquier vehículo registrado, es decir, con placa) y los gastos que realices en ellos.',
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Para empezar, haz clic en el botón "Agregar vehículo" ubicado en la esquina inferior derecha de la pestaña "Vehículos" para añadir cualquiera de tus vehículos que quieras monitorear a la app. Una vez agregado, se verá reflejado en una lista en la pantalla principal.',
+                      'Para empezar, haz clic en el botón "Agregar vehículo" ubicado en la parte inferior de la pestaña "Vehículos" para añadir cualquiera de tus vehículos que quieras monitorear a la app. Una vez agregado, se verá reflejado en una lista en la pantalla principal.',
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Para llevar el monitoreo de tus gastos, haz clic en el botón "Agregar gasto" para añadir las siguientes características de tus gastos; categoría, a qué vehículo corresponde, una pequeña descripción, la fecha en la que lo realizaste y el monto que gastó.',
+                      'Para llevar el monitoreo de tus gastos, haz clic en el botón "Agregar gasto" en la parte inferior de la pestaña "Gastos" para añadir las siguientes características de tus gastos; categoría, a qué vehículo corresponde, quién realizó la modificación, la fecha en la que lo realizaste y el monto que se gastó.',
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Las características de Categorías y Responsables las puedes editar tu mismo. Si te diriges a la esquina superior derecha de la aplicación, puedes encontrar las pestañas que te permitirán añadir, editar o eliminar cualquiera.',
+                      'Las características de Categorías y Responsables las puedes editar tu mismo. Si te diriges a la esquina superior derecha de la aplicación, puedes encontrar las pestañas que te permitirán añadir, editar o eliminar cualquiera de los dos.',
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'En la pestaña "Consultas", puedes realizar búsquedas de tus gastos dentro de un periodo de tiempo para llevar control de los mismos. Solamente necesitas ingresar el rango de fechas que deseas y lo gastos correspondientes se verán en una lista, así como el total.',
                     ),
                   ],
                 ),
@@ -1011,11 +1021,14 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
     var estadoVehiculos = context.watch<BlocVehiculo>().state;
     vehiculos = (estadoVehiculos as EstadoCargarVehiculos).vehiculos;
     var estado = context.watch<GastoBloc>().state;
-     gastos = (estado as EstadoCargarGasto).gastos;
-     var estadoCategoria = context.watch<CategoriaBloc>().state;
-     categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
-     var estadoResponsables = context.watch<ResponsableBloc>().state;
-     responsablessss = (estadoResponsables as EstadoCargarResponsables).responsables;
+    gastos = (estado as EstadoCargarGasto).gastos;
+    var estadoCategoria = context.watch<CategoriaBloc>().state;
+    categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
+    var estadoResponsables = context.watch<ResponsableBloc>().state;
+    responsablessss =
+        (estadoResponsables as EstadoCargarResponsables).responsables;
+
+    context.read<BlocVehiculo>().add(Inicializo());
     return Scaffold(
       body: Column(
         children: [
@@ -1168,6 +1181,11 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
     return value[0].toUpperCase() + value.substring(1);
   }
 
+  Future<bool> validarPlacaNoRegistrada(String placa) async {
+    final placaRegistrada = await BaseDatos().todosLosNombres();
+    return !placaRegistrada.contains(placa.toUpperCase());
+  }
+
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -1256,6 +1274,31 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  if (controladorPlacaE.text != vehiculo.placa) {
+                    bool placaNoRegistrada =
+                        await validarPlacaNoRegistrada(controladorPlacaE.text);
+                    if (!placaNoRegistrada) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Placa ya registrada'),
+                            content: const Text('Ingrese otra placa.'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      return;
+                    }
+                  }
+
                   if (!validarCampo(context, controladorPlacaE.text) ||
                       !validarCampo(context, controladorModeloE.text) ||
                       !validarCampo(context, controladorMarcaE.text) ||
@@ -1536,11 +1579,14 @@ class _ListaGastosState extends State<ListaGastos> {
     var estado = context.watch<BlocVehiculo>().state;
     vehiculos = (estado as EstadoCargarVehiculos).vehiculos;
     var estadoGas = context.watch<GastoBloc>().state;
-     gastos = (estadoGas as EstadoCargarGasto).gastos;
-     var estadoCategoria = context.watch<CategoriaBloc>().state;
-     categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
-     var estadoResponsables = context.watch<ResponsableBloc>().state;
-     responsablessss = (estadoResponsables as EstadoCargarResponsables).responsables;
+    gastos = (estadoGas as EstadoCargarGasto).gastos;
+    var estadoCategoria = context.watch<CategoriaBloc>().state;
+    categorias = (estadoCategoria as EstadoCargarCategorias).categorias;
+    var estadoResponsables = context.watch<ResponsableBloc>().state;
+    responsablessss =
+        (estadoResponsables as EstadoCargarResponsables).responsables;
+
+    context.read<GastoBloc>().add(Inicializo2());
     return Scaffold(
       body: Column(
         children: [
@@ -1590,7 +1636,7 @@ class _ListaGastosState extends State<ListaGastos> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    ' \$$totalGastosFiltrados2',
+                    ' \$${formatter.format(totalGastosFiltrados2)}',
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -1606,10 +1652,12 @@ class _ListaGastosState extends State<ListaGastos> {
                 final List<Gastos> gastosToDisplay =
                     gastosFiltrados.isNotEmpty ? gastosFiltrados : gastos;
 
+                context.read<GastoBloc>().add(Inicializo2());
                 return Expanded(
                   child: ListView.builder(
                     itemCount: gastosToDisplay.length,
                     itemBuilder: (context, index) {
+                      context.read<GastoBloc>().add(Inicializo2());
                       final gasto = gastosToDisplay[index];
                       DateTime fecha =
                           DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
@@ -1702,24 +1750,29 @@ class _ListaGastosState extends State<ListaGastos> {
 
 void editarGastos(BuildContext context, Gastos gasto) {
   Categorias? categoriaSeleccionada;
-  final TextEditingController categoriaControllerE = TextEditingController();
-  final TextEditingController vehiculoControllerE = TextEditingController();
-  final TextEditingController responsableControllerE = TextEditingController();
+  TextEditingController categoriaControllerE = TextEditingController();
+  TextEditingController vehiculoControllerE = TextEditingController();
+  TextEditingController responsableControllerE = TextEditingController();
+  TextEditingController fechaController = TextEditingController();
   TextEditingController controladorMontoE = TextEditingController();
   DateTime fechaSeleccionada =
       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
 
-   String categoriaNombre = gasto.categoria_nombre ?? 'General';
-   String vehiculoNombre = gasto.vehiculo_nombre ?? 'Vehiculo';
-   String responsableNombre = gasto.responsable_nombre ?? 'Usuario';
+  String categoriaNombre = gasto.categoria_nombre ?? 'General';
+  String vehiculoNombre = gasto.vehiculo_nombre ?? 'Vehiculo';
+  String responsableNombre = gasto.responsable_nombre ?? 'Usuario';
+
+  DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+  fechaController.text = DateFormat('dd/MMMM/yyyy').format(fecha);
 
   categoriaControllerE.text = categoriaNombre;
   vehiculoControllerE.text = vehiculoNombre;
   responsableControllerE.text = responsableNombre;
   controladorMontoE.text = gasto.monto.toString();
-  // DateTime fechaSeleccionada = DateTime.parse(gasto.fecha.toString());
+
+  categoriaSeleccionada = Categorias(nombre: categoriaNombre);
 
   showDialog(
     context: context,
@@ -1815,6 +1868,7 @@ void editarGastos(BuildContext context, Gastos gasto) {
                     ),
                   ),
                   DateTimeField(
+                    controller: fechaController,
                     decoration: const InputDecoration(
                         labelText: 'Fecha', icon: Icon(Icons.calendar_month)),
                     format: DateFormat(DateFormat.YEAR_MONTH_DAY),
@@ -1871,27 +1925,25 @@ void editarGastos(BuildContext context, Gastos gasto) {
               ),
               ElevatedButton(
                 onPressed: () {
-                  final categoriaGasto = categoriaSeleccionada;
-                  final vehiculoGasto = vehiculoSeleccionado;
-                  final responsableGasto = responsableSeleccionado;
-                  final monto = double.tryParse(
+                  double? monto = double.tryParse(
                       controladorMontoE.text.replaceAll(',', ''));
-                  final int fechaString =
-                      fechaSeleccionada.millisecondsSinceEpoch;
-                  if (categoriaGasto != null &&
-                      vehiculoGasto != null &&
-                      monto != null) {
+                  int fechaString = fechaSeleccionada.millisecondsSinceEpoch;
+
+                  if (monto != null) {
                     context.read<GastoBloc>().add(EventoEditarGasto(
                         gasto: Gastos(
-                            vehiculoID: vehiculoGasto.id!,
-                            categoria: categoriaGasto.id!,
-                            responsable: responsableGasto!,
+                            id: gasto.id,
+                            vehiculoID:
+                                vehiculoSeleccionado?.id ?? gasto.vehiculoID,
+                            categoria:
+                                categoriaSeleccionada?.id ?? gasto.categoria,
+                            responsable:
+                                responsableSeleccionado ?? gasto.responsable,
                             fecha: fechaString,
                             monto: monto)));
-                    /* print(
-                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString'); */
-                  }
-                  Navigator.of(context).pop();
+
+                    Navigator.of(context).pop();
+                  } else {}
                 },
                 child: const Text('Guardar'),
               ),
@@ -2121,7 +2173,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
     );
 
     if (picked != null &&
-        (fechaFinal == null || picked.isBefore(fechaFinal!))) {
+        (fechaFinal == picked || picked.isBefore(fechaFinal!))) {
       setState(() {
         fechaInicial = picked;
       });
@@ -2156,7 +2208,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
     );
 
     if (picked != null &&
-        (fechaInicial == null || picked.isAfter(fechaInicial!))) {
+        (fechaInicial == picked || picked.isAfter(fechaInicial!))) {
       setState(() {
         fechaFinal = picked;
       });
@@ -2194,7 +2246,6 @@ class _ListaConsultasState extends State<ListaConsultas> {
     for (var gasto in gastos) {
       totalGastos += gasto.monto;
     }
-
     return Scaffold(
       body: Column(
         children: [
@@ -2238,7 +2289,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
               child: Row(
                 children: [
                   Text(
-                    'Total: \$${totalGastos.toStringAsFixed(2)}',
+                    'Total: \$${formatter.format(totalGastos)}',
                     style: const TextStyle(
                         fontSize: 18.0, fontWeight: FontWeight.bold),
                   ),
