@@ -1,6 +1,6 @@
 {
-    "name": "MyCarApp",
-    "short_name": "MyCarApp",
+    "name": "my_car_app",
+    "short_name": "my_car_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

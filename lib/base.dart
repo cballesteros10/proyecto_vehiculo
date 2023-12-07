@@ -1,14 +1,12 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:MyCarApp/modelos/plantilla.dart';
-// import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:my_car_app/modelos/plantilla.dart';
 
 late Database _basedatos;
 
 class BaseDatos {
-  // ignore: constant_identifier_names
-  static const String nombre_db = 'base4.db';
+  static const String nombreDB = 'base4.db';
   static const String tablaVehiculos = 'vehiculos';
   static const String tablaGastos = 'gastos';
   static const String tablaCategorias = 'categorias';
@@ -16,7 +14,7 @@ class BaseDatos {
 
   Future<void> initDatabase() async {
     _basedatos = await openDatabase(
-      join(await getDatabasesPath(), nombre_db),
+      join(await getDatabasesPath(), nombreDB),
       onCreate: (db, version) async {
         await db.execute('CREATE TABLE $tablaVehiculos('
             'id INTEGER PRIMARY KEY AUTOINCREMENT,'
@@ -218,7 +216,6 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
         [nombre, direccion, telefono, id]);
   }
 
-  // ignore: non_constant_identifier_names
   Future<List<Gastos>> editarGasto(Gastos gastos) async {
     await _basedatos.update(tablaGastos, 
     {
@@ -236,9 +233,9 @@ Future<int> obtenerIDCategoriaPredeterminada() async {
     List<Gastos> lista = gastosActualizados.map((e) {
           return Gastos(
             id: e['id'],
-            vehiculo_nombre: e['placas'],
-            categoria_nombre: e['categorias'],
-            responsable_nombre: e['responsables'],
+            vehiculoNombre: e['placas'],
+            categoriaNombre: e['categorias'],
+            responsableNombre: e['responsables'],
             vehiculoID: e['vehiculo_id'], 
             categoria: e['categoria_id'], 
             responsable: e['responsable_id'], 

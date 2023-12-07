@@ -1,8 +1,7 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:MyCarApp/base.dart';
-import 'package:MyCarApp/modelos/plantilla.dart';
+import 'package:my_car_app/base.dart';
+import 'package:my_car_app/modelos/plantilla.dart';
 
 sealed class EstadoVehiculo with EquatableMixin {
   final List<Vehiculo> vehiculos;
@@ -110,15 +109,7 @@ class BlocVehiculo extends Bloc<EventoVehiculo, EstadoVehiculo> {
       fecha: int.parse(event.fecha)));
     } else if (event is EventoEliminarVehiculo) {
       await _base.eliminarVehiculo(event.vehiculoID);
-    } /* else if (event is EventoAgregarGasto) {
-      await _base.agregarGasto(event.vehiculoID, 
-      Gastos(event.vehiculoID,
-      categoria: [], 
-      descripcion: event.descripcion, 
-      responsable: [], 
-      fecha: event.fecha, 
-      monto: event.monto));
-    } */
+    } 
     yield* _mapaEstado();
   }
 

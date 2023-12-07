@@ -1,12 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:MyCarApp/blocs/gastosbloc.dart';
-import 'package:MyCarApp/base.dart';
-import 'package:MyCarApp/blocs/vehiculobloc.dart';
+import 'package:my_car_app/blocs/gastosbloc.dart';
+import 'package:my_car_app/base.dart';
+import 'package:my_car_app/blocs/vehiculobloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:MyCarApp/modelos/plantilla.dart';
+import 'package:my_car_app/modelos/plantilla.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
@@ -35,7 +33,6 @@ class AplicacionInyectada extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // BaseDatos _base = BaseDatos();
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -346,6 +343,7 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                       bool categoriaNoRegistrada =
                           await validarCategoriaNoRegistrada(nombreCategoria);
                       if (!categoriaNoRegistrada) {
+                        if (!context.mounted) return;
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -356,7 +354,7 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                                 TextButton(
                                   child: const Text('OK'),
                                   onPressed: () {
-                                    Navigator.of(context).pop();
+                                    Navigator.pop(context);
                                   },
                                 ),
                               ],
@@ -365,9 +363,10 @@ void editarCategoria(BuildContext context, Categorias categorias) {
                         );
                         return;
                       }
+                      if (!context.mounted) return;
                       context.read<CategoriaBloc>().add(EventoEditarCategoria(
                           controladorNombreE.text, categorias.id!));
-                      Navigator.of(context).pop();
+                      Navigator.pop(context);
                     },
                     child: const Text('Guardar'),
                   ),
@@ -593,6 +592,7 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                             await validarResponsableNoRegistrado(
                                 telefonoResponsable);
                         if (!responsableNoRegistrado) {
+                          if (!context.mounted) return;
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -618,6 +618,7 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
                           telefonoResponsable.isNotEmpty) {
+                            if (!context.mounted) return;
                         context.read<ResponsableBloc>().add(
                             EventoEditarResponsable(
                                 nombreResponsable,
@@ -625,6 +626,7 @@ void editarResponsable(BuildContext context, Responsables responsables) {
                                 telefonoResponsable,
                                 responsables.id!));
                       }
+                      if (!context.mounted) return;
                       Navigator.of(context).pop();
                     },
                     child: const Text('Guardar'),
@@ -701,6 +703,7 @@ void mostrarAgregarCategoria(BuildContext context) {
                       bool categoriaNoRegistrada =
                           await validarCategoriaNoRegistrada(nombreCategoria);
                       if (!categoriaNoRegistrada) {
+                        if (!context.mounted) return;
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -720,7 +723,7 @@ void mostrarAgregarCategoria(BuildContext context) {
                         );
                         return;
                       }
-
+                      if (!context.mounted) return;
                       context
                           .read<CategoriaBloc>()
                           .add(EventoAgregarCategoria(nombreCategoria));
@@ -826,6 +829,7 @@ void mostrarAgregarResponsable(BuildContext context) {
                           await validarResponsableNoRegistrado(
                               telefonoResponsable);
                       if (!responsableNoRegistrado) {
+                        if (!context.mounted) return;
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -849,10 +853,12 @@ void mostrarAgregarResponsable(BuildContext context) {
                       if (nombreResponsable.isNotEmpty &&
                           direccionResponsable.isNotEmpty &&
                           telefonoResponsable.isNotEmpty) {
+                            if (!context.mounted) return;
                         context.read<ResponsableBloc>().add(
                             EventoAgregarResponsable(nombreResponsable,
                                 direccionResponsable, telefonoResponsable));
                       }
+                      if (!context.mounted) return;
                       Navigator.of(context).pop();
                     },
                     child: const Text('Agregar'),
@@ -910,7 +916,7 @@ class Ayuda extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'MyCarApp es una app capaz de llevar registro de tus autos (o cualquier vehículo registrado, es decir, con placa) y los gastos que realices en ellos.',
+                      'my_car_app es una app capaz de llevar registro de tus autos (o cualquier vehículo registrado, es decir, con placa) y los gastos que realices en ellos.',
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -951,8 +957,7 @@ class TabsRemix extends StatefulWidget {
   const TabsRemix({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _TabsRemixState createState() => _TabsRemixState();
+  State<TabsRemix> createState() => _TabsRemixState();
 }
 
 class _TabsRemixState extends State<TabsRemix>
@@ -1278,6 +1283,7 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                     bool placaNoRegistrada =
                         await validarPlacaNoRegistrada(controladorPlacaE.text);
                     if (!placaNoRegistrada) {
+                      if (!context.mounted) return;
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -1298,7 +1304,7 @@ void editarVehiculo(BuildContext context, Vehiculo vehiculo) {
                       return;
                     }
                   }
-
+                  if (!context.mounted) return;
                   if (!validarCampo(context, controladorPlacaE.text) ||
                       !validarCampo(context, controladorModeloE.text) ||
                       !validarCampo(context, controladorMarcaE.text) ||
@@ -1487,6 +1493,7 @@ void agregarVehiculos(BuildContext context) {
                   bool placaNoRegistrada =
                       await validarPlacaNoRegistrada(placaVehiculo);
                   if (!placaNoRegistrada) {
+                    if (!context.mounted) return;
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -1512,6 +1519,7 @@ void agregarVehiculos(BuildContext context) {
                       marcaVehiculo.isNotEmpty &&
                       tipoVehiculo.isNotEmpty &&
                       fechaVehiculo.isNotEmpty) {
+                        if (!context.mounted) return;
                     context.read<BlocVehiculo>().add(EventoAgregarVehiculo(
                         placaVehiculo,
                         modeloVehiculo,
@@ -1520,6 +1528,7 @@ void agregarVehiculos(BuildContext context) {
                         fechaVehiculo));
                     Navigator.of(context).pop();
                   } else {
+                    if (!context.mounted) return;
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -1604,10 +1613,10 @@ class _ListaGastosState extends State<ListaGastos> {
                 setState(() {
                   gastosFiltrados = gastos
                       .where((gasto) =>
-                          gasto.categoria_nombre!
+                          gasto.categoriaNombre!
                               .toLowerCase()
                               .contains(value.toLowerCase()) ||
-                          gasto.vehiculo_nombre!
+                          gasto.vehiculoNombre!
                               .toLowerCase()
                               .contains(value.toLowerCase()) ||
                           gasto.monto
@@ -1664,9 +1673,9 @@ class _ListaGastosState extends State<ListaGastos> {
                       String fechaFormateada =
                           DateFormat('dd/MMMM/yyyy').format(fecha);
                       String categoriaNombre =
-                          gasto.categoria_nombre ?? 'General';
+                          gasto.categoriaNombre ?? 'General';
                       String vehiculoNombre =
-                          gasto.vehiculo_nombre ?? 'Vehiculo';
+                          gasto.vehiculoNombre ?? 'Vehiculo';
                       return Card(
                         child: ListTile(
                           title: Text('$categoriaNombre - $vehiculoNombre'),
@@ -1760,9 +1769,9 @@ void editarGastos(BuildContext context, Gastos gasto) {
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
 
-  String categoriaNombre = gasto.categoria_nombre ?? 'General';
-  String vehiculoNombre = gasto.vehiculo_nombre ?? 'Vehiculo';
-  String responsableNombre = gasto.responsable_nombre ?? 'Usuario';
+  String categoriaNombre = gasto.categoriaNombre ?? 'General';
+  String vehiculoNombre = gasto.vehiculoNombre ?? 'Vehiculo';
+  String responsableNombre = gasto.responsableNombre ?? 'Usuario';
 
   DateTime fecha = DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
   fechaController.text = DateFormat('dd/MMMM/yyyy').format(fecha);
@@ -1961,9 +1970,7 @@ void agregarGastos(BuildContext context) {
   final TextEditingController vehiculoController = TextEditingController();
   final TextEditingController responsableController = TextEditingController();
   TextEditingController controladorMonto = TextEditingController();
-  DateTime fechaSeleccionada =
-      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  //int date = fechaSeleccionada.millisecondsSinceEpoch;
+  DateTime fechaSeleccionada = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   Vehiculo? vehiculoSeleccionado;
   int? responsableSeleccionado;
 
@@ -2135,8 +2142,6 @@ void agregarGastos(BuildContext context) {
                             responsable: responsableGasto!,
                             fecha: fechaString,
                             monto: monto)));
-                    /* print(
-                        '$monto ${vehiculoGasto.id} ${categoriaGasto.nombre} $responsableSeleccionado $fechaString'); */
                   }
                   Navigator.of(context).pop();
                 },
@@ -2178,6 +2183,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
         fechaInicial = picked;
       });
     } else {
+      if (!context.mounted) return;
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -2214,6 +2220,7 @@ class _ListaConsultasState extends State<ListaConsultas> {
       });
       _consultarGastos();
     } else {
+      if (!context.mounted) return;
       showDialog(
         context: context,
         builder: (BuildContext context) {

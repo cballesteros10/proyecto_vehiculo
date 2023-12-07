@@ -1,7 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first, non_constant_identifier_names
-// import 'package:equatable/equatable.dart';
-// import 'package:flutter/foundation.dart';
-
 class Vehiculo {
   late int? id;
   late String placa;
@@ -26,13 +22,6 @@ class Vehiculo {
     marca = map['marca'];
     tipo = map['tipo'];
     fecha = map['fecha'];
-
-    /* final List<Map<String, dynamic>> gastosMapList = map['gastos'] ?? [];
-
-    gastos = gastosMapList.map((g) => Gastos.fromMap(g)).toList(); */
-    @override
-    String toString() =>
-        'Vehiculos(id: $id, placa: $placa, modelo: $modelo, marca: $marca, tipo: $tipo, fecha: $fecha)';
   }
 
   @override
@@ -71,19 +60,19 @@ class Vehiculo {
 class Gastos {
   late int? id;
   late int vehiculoID;
-  String? vehiculo_nombre;
+  String? vehiculoNombre;
   late int categoria;
-  String? categoria_nombre;
+  String? categoriaNombre;
   late int responsable;
-  String? responsable_nombre;
+  String? responsableNombre;
   late int fecha;
   late double monto;
 
   Gastos({
     this.id,
-    this.categoria_nombre,
-    this.vehiculo_nombre,
-    this.responsable_nombre,
+    this.categoriaNombre,
+    this.vehiculoNombre,
+    this.responsableNombre,
     required this.vehiculoID,
     required this.categoria,
     required this.responsable,
