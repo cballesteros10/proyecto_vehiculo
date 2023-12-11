@@ -1034,134 +1034,181 @@ class _ListaVehiculosState extends State<ListaVehiculos> {
         (estadoResponsables as EstadoCargarResponsables).responsables;
 
     context.read<BlocVehiculo>().add(Inicializo());
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar vehículo...',
-                prefixIcon: const Icon(Icons.search),
-                suffixText: 'Vehículos: ${vehiculosFiltrados.length}',
-                suffixStyle: const TextStyle(color: Colors.grey),
+    return GestureDetector(
+      onTap: () {
+      FocusScope.of(context).unfocus();
+    },
+      child: Scaffold(
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Buscar vehículo...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixText: 'Vehículos: ${vehiculosFiltrados.length}',
+                  suffixStyle: const TextStyle(color: Colors.grey),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    vehiculosFiltrados = vehiculos
+                        .where((vehiculo) =>
+                            vehiculo.placa
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            vehiculo.modelo
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            vehiculo.marca
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            vehiculo.tipo
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            vehiculo.fecha
+                                .toString()
+                                .toLowerCase()
+                                .contains(value.toLowerCase()))
+                        .toList();
+                  });
+                },
               ),
-              onChanged: (value) {
-                setState(() {
-                  vehiculosFiltrados = vehiculos
-                      .where((vehiculo) =>
-                          vehiculo.placa
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          vehiculo.modelo
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          vehiculo.marca
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          vehiculo.tipo
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          vehiculo.fecha
-                              .toString()
-                              .toLowerCase()
-                              .contains(value.toLowerCase()))
-                      .toList();
-                });
+            ),
+            BlocBuilder<BlocVehiculo, EstadoVehiculo>(
+              builder: (context, state) {
+                if (state is EstadoCargarVehiculos) {
+                  vehiculos = state.vehiculos;
+    
+                  List<Vehiculo> vehiculosToDisplay =
+                      vehiculosFiltrados.isNotEmpty
+                          ? vehiculosFiltrados
+                          : vehiculos;
+                  if(vehiculosFiltrados.isEmpty && _searchController.text != '') {
+                    vehiculosToDisplay = [];
+                  }
+    
+                  return Expanded(
+      child: GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, 
+        crossAxisSpacing: 2.0,
+        mainAxisSpacing: 2.0,
+      ),
+      itemCount: vehiculosToDisplay.length,
+      itemBuilder: (context, index) {
+        final vehiculo = vehiculosToDisplay[index];
+        context.read<GastoBloc>().add(Inicializo2());
+        context.read<CategoriaBloc>().add(Inicializo3());
+        context.read<ResponsableBloc>().add(Inicializo4());
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: InkWell(
+              onTap: () {
+                editarVehiculo(context, vehiculo);
               },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.toys,
+                      size: 25,
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    Text(
+                      vehiculo.placa,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                    ),
+                    Text(
+                      '${vehiculo.modelo} - ${vehiculo.fecha}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vehiculo.marca,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      vehiculo.tipo,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            editarVehiculo(context, vehiculo);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirmar eliminación'),
+                                  content: const Text(
+                                      '¿Está seguro de eliminar este vehículo? Se eliminará de forma permanente.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: const Text('Cancelar'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    ElevatedButton(
+                                      child: const Text('Eliminar'),
+                                      onPressed: () {
+                                        context.read<BlocVehiculo>().add(
+                                            EventoEliminarVehiculo(
+                                                vehiculo.id!));
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+          ]),
             ),
           ),
-          BlocBuilder<BlocVehiculo, EstadoVehiculo>(
-            builder: (context, state) {
-              if (state is EstadoCargarVehiculos) {
-                vehiculos = state.vehiculos;
-
-                final List<Vehiculo> vehiculosToDisplay =
-                    vehiculosFiltrados.isNotEmpty
-                        ? vehiculosFiltrados
-                        : vehiculos;
-
-                return Expanded(
-                  child: ListView.builder(
-                    itemCount: vehiculosToDisplay.length,
-                    itemBuilder: (context, index) {
-                      final vehiculo = vehiculosToDisplay[index];
-                      context.read<GastoBloc>().add(Inicializo2());
-                      context.read<CategoriaBloc>().add(Inicializo3());
-                      context.read<ResponsableBloc>().add(Inicializo4());
-                      return Card(
-                        child: ListTile(
-                          title: Text(
-                              '${vehiculo.id}. ${vehiculo.placa} - ${vehiculo.modelo} ${vehiculo.fecha}'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(vehiculo.marca),
-                              Text(vehiculo.tipo),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  editarVehiculo(context, vehiculo);
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title:
-                                            const Text('Confirmar eliminación'),
-                                        content: const Text(
-                                            '¿Está seguro de eliminar este vehículo? Se eliminara de forma permanente.'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('Cancelar'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          ElevatedButton(
-                                            child: const Text('Eliminar'),
-                                            onPressed: () {
-                                              context.read<BlocVehiculo>().add(
-                                                  EventoEliminarVehiculo(
-                                                      vehiculo.id!));
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
-          ),
-        ],
+        );
+      },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          agregarVehiculos(context);
-        },
+    );
+                }
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            agregarVehiculos(context);
+          },
+        ),
       ),
     );
   }
@@ -1596,162 +1643,182 @@ class _ListaGastosState extends State<ListaGastos> {
         (estadoResponsables as EstadoCargarResponsables).responsables;
 
     context.read<GastoBloc>().add(Inicializo2());
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _buscarGastos,
-              decoration: InputDecoration(
-                hintText: 'Buscar gasto...',
-                prefixIcon: const Icon(Icons.search),
-                suffixText: 'Gastos: ${gastosFiltrados.length}',
-                suffixStyle: const TextStyle(color: Colors.grey),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  gastosFiltrados = gastos
-                      .where((gasto) =>
-                          gasto.categoriaNombre!
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          gasto.vehiculoNombre!
-                              .toLowerCase()
-                              .contains(value.toLowerCase()) ||
-                          gasto.monto
-                              .toString()
-                              .toLowerCase()
-                              .contains(value.toLowerCase()))
-                      .toList();
-                  double totalGastosFiltrados = gastosFiltrados.fold(
-                    0,
-                    (previousValue, gasto) => previousValue + gasto.monto,
-                  );
+    return GestureDetector(
+      onTap: () {
+      FocusScope.of(context).unfocus();
+    },
+      child: Scaffold(
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _buscarGastos,
+                decoration: InputDecoration(
+                  hintText: 'Buscar gasto...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixText: 'Gastos: ${gastosFiltrados.length}',
+                  suffixStyle: const TextStyle(color: Colors.grey),
+                ),
+                onChanged: (value) {
                   setState(() {
-                    totalGastosFiltrados2 = totalGastosFiltrados;
+                    gastosFiltrados = gastos
+                        .where((gasto) =>
+                            gasto.categoriaNombre!
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            gasto.vehiculoNombre!
+                                .toLowerCase()
+                                .contains(value.toLowerCase()) ||
+                            gasto.monto
+                                .toString()
+                                .toLowerCase()
+                                .contains(value.toLowerCase()))
+                        .toList();
+                    double totalGastosFiltrados = gastosFiltrados.fold(
+                      0,
+                      (previousValue, gasto) => previousValue + gasto.monto,
+                    );
+                    setState(() {
+                      totalGastosFiltrados2 = totalGastosFiltrados;
+                      if(_buscarGastos.text == '') {
+                        totalGastosFiltrados2 = 0;
+                      }
+                    });
                   });
-                });
+                },
+              ),
+            ),
+            Card(
+              elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Total de gastos:',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      ' \$${formatter.format(totalGastosFiltrados2)}',
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            BlocBuilder<GastoBloc, EstadoGasto>(
+              builder: (context, state) {
+                if (state is EstadoCargarGasto) {
+                  gastos = state.gastos;
+    
+                  List<Gastos> gastosToDisplay =
+                      gastosFiltrados.isNotEmpty ? gastosFiltrados : gastos;
+    
+                  if(gastosFiltrados.isEmpty && _buscarGastos.text != '') {
+                    gastosToDisplay = [];
+                  }
+    
+                  context.read<GastoBloc>().add(Inicializo2());
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: gastosToDisplay.length,
+                      itemBuilder: (context, index) {
+                        context.read<GastoBloc>().add(Inicializo2());
+                        final gasto = gastosToDisplay[index];
+                        DateTime fecha =
+                            DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
+                        String fechaFormateada =
+                            DateFormat('dd/MMMM/yyyy').format(fecha);
+                        String categoriaNombre =
+                            gasto.categoriaNombre ?? 'General';
+                        String vehiculoNombre =
+                            gasto.vehiculoNombre ?? 'Vehiculo';
+                        return Card(
+                          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+                          child: ListTile(
+                            title: Text('$categoriaNombre - $vehiculoNombre'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Cantidad: ${gasto.monto.toString()}'),
+                                Text(fechaFormateada),
+                                Text(
+                                    'ID Vehiculo: ${gasto.vehiculoID.toString()}')
+                              ],
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    editarGastos(context, gasto);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title:
+                                              const Text('Confirmar eliminación'),
+                                          content: const Text(
+                                              '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              child: const Text('Cancelar'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                            ElevatedButton(
+                                              child: const Text('Eliminar'),
+                                              onPressed: () {
+                                                context.read<GastoBloc>().add(
+                                                    EventoEliminarGasto(
+                                                        gasto.id!));
+                                                // print('${gasto.id}');
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
               },
             ),
-          ),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'Total de gastos:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    ' \$${formatter.format(totalGastosFiltrados2)}',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          BlocBuilder<GastoBloc, EstadoGasto>(
-            builder: (context, state) {
-              if (state is EstadoCargarGasto) {
-                gastos = state.gastos;
-
-                final List<Gastos> gastosToDisplay =
-                    gastosFiltrados.isNotEmpty ? gastosFiltrados : gastos;
-
-                context.read<GastoBloc>().add(Inicializo2());
-                return Expanded(
-                  child: ListView.builder(
-                    itemCount: gastosToDisplay.length,
-                    itemBuilder: (context, index) {
-                      context.read<GastoBloc>().add(Inicializo2());
-                      final gasto = gastosToDisplay[index];
-                      DateTime fecha =
-                          DateTime.fromMillisecondsSinceEpoch(gasto.fecha);
-                      String fechaFormateada =
-                          DateFormat('dd/MMMM/yyyy').format(fecha);
-                      String categoriaNombre =
-                          gasto.categoriaNombre ?? 'General';
-                      String vehiculoNombre =
-                          gasto.vehiculoNombre ?? 'Vehiculo';
-                      return Card(
-                        child: ListTile(
-                          title: Text('$categoriaNombre - $vehiculoNombre'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Cantidad: ${gasto.monto.toString()}'),
-                              Text(fechaFormateada),
-                              Text(
-                                  'ID Vehiculo: ${gasto.vehiculoID.toString()}')
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  editarGastos(context, gasto);
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title:
-                                            const Text('Confirmar eliminación'),
-                                        content: const Text(
-                                            '¿Está seguro de eliminar este gasto? Se eliminará de forma permanente.'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('Cancelar'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          ElevatedButton(
-                                            child: const Text('Eliminar'),
-                                            onPressed: () {
-                                              context.read<GastoBloc>().add(
-                                                  EventoEliminarGasto(
-                                                      gasto.id!));
-                                              // print('${gasto.id}');
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            },
-          ),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          agregarGastos(context);
-        },
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            agregarGastos(context);
+          },
+        ),
       ),
     );
   }

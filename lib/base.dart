@@ -6,7 +6,7 @@ import 'package:my_car_app/modelos/plantilla.dart';
 late Database _basedatos;
 
 class BaseDatos {
-  static const String nombreDB = 'base4.db';
+  static const String nombreDB = 'basedatos.db';
   static const String tablaVehiculos = 'vehiculos';
   static const String tablaGastos = 'gastos';
   static const String tablaCategorias = 'categorias';
